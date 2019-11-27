@@ -4,6 +4,7 @@
 
 namespace NCL {
 	namespace Maths {
+		//template<typename T>
 		struct RayCollision {
 			void*		node;			//Node that was hit
 			Vector3		collidedAt;		//WORLD SPACE position of the collision!

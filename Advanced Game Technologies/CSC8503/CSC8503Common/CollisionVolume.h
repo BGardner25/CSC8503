@@ -9,8 +9,7 @@ namespace NCL {
 		Invalid = 256
 	};
 
-	class CollisionVolume
-	{
+	class CollisionVolume {
 	public:
 		CollisionVolume() {
 			type = VolumeType::Invalid;
