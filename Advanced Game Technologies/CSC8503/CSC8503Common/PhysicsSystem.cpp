@@ -225,6 +225,19 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 
 		linearVel += accel * dt;	// integrate acceleration
 		object->SetLinearVelocity(linearVel);
+
+		
+		// angular calculations
+		Vector3 torque = object->GetTorque();
+		Vector3 angVel = object->GetAngularVelocity();
+
+		object->UpdateInertiaTensor();
+
+		Vector3 angAccel = object->GetInertiaTensor() * torque;
+
+		// integrate angular acceleration
+		angVel += angAccel * dt;
+		object->SetAngularVelocity(angVel);
 	}
 }
 
@@ -257,6 +270,21 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		// linear damping - simulate drag/air resistance by reducing linearVelocity each frame
 		linearVel = linearVel * frameDamping;
 		object->SetLinearVelocity(linearVel);
+
+
+		// orientation calculations
+		Quaternion orientation = transform.GetLocalOrientation();
+		Vector3 angVel = object->GetAngularVelocity();
+
+		// integrate angular velocity. * 0.5 is just a quaternion quirk
+		orientation = orientation + (Quaternion(angVel * dt * 0.5f, 0.0f) * orientation);
+		orientation.Normalise();
+
+		transform.SetLocalOrientation(orientation);
+
+		// damping for angular velocity to prevent forever spinning
+		angVel = angVel * frameDamping;
+		object->SetAngularVelocity(angVel);
 	}
 }
 
