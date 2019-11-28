@@ -285,7 +285,22 @@ line - after the third, they'll be able to twist under torque aswell.
 */
 
 void TutorialGame::MoveSelectedObject() {
+	// draw text at 10, 20
+	renderer->DrawString("Click Force: " + std::to_string(forceMagnitude), Vector2(10, 20));
+	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
 
+	if (!selectionObject)
+		return;	// nothing has been selected
+
+	// push the selected object
+	if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::RIGHT)) {
+		Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
+
+		RayCollision closestCollision;
+		if (world->Raycast(ray, closestCollision, true))
+			if (closestCollision.node == selectionObject)
+				selectionObject->GetPhysicsObject()->AddForce(ray.GetDirection() * forceMagnitude);
+	}
 }
 
 void TutorialGame::InitCamera() {
