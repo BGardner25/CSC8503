@@ -323,7 +323,8 @@ void TutorialGame::InitWorld() {
 	AddParkKeeperToWorld(Vector3(40, 2, 0));
 	AddCharacterToWorld(Vector3(45, 2, 0));
 
-	AddFloorToWorld(Vector3(0, -2, 0));
+	// second floor? initmixedgridworld adds floor also
+	//AddFloorToWorld(Vector3(0, -2, 0));
 }
 
 //From here on it's functions to add in objects to the world!
