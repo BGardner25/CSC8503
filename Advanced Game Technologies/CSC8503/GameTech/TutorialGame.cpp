@@ -301,6 +301,20 @@ void TutorialGame::MoveSelectedObject() {
 			if (closestCollision.node == selectionObject)
 				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
 	}
+	if (inSelectionMode) {
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * 100.0f);
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * 100.0f);
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * 100.0f);
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * 100.0f);
+		}
+	}
 }
 
 void TutorialGame::InitCamera() {
@@ -323,6 +337,10 @@ void TutorialGame::InitWorld() {
 	AddParkKeeperToWorld(Vector3(40, 2, 0));
 	AddCharacterToWorld(Vector3(45, 2, 0));
 
+	AddCubeToWorld(Vector3(0, 5, 0), Vector3(1, 2, 4));
+	AddSphereToWorld(Vector3(0, 10, -10), 2.0f, 10.0f, true);
+	AddSphereToWorld(Vector3(0, 10, -20), 2.0f, 10.0f, false);
+
 	// second floor... initmixedgridworld adds floor also
 	//AddFloorToWorld(Vector3(0, -2, 0));
 }
@@ -335,7 +353,7 @@ A single function to add a large immoveable cube to the bottom of our world
 
 */
 GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
-	GameObject* floor = new GameObject();
+	GameObject* floor = new GameObject("Floor");
 
 	Vector3 floorSize = Vector3(100, 2, 100);
 	AABBVolume* volume = new AABBVolume(floorSize);
@@ -361,8 +379,8 @@ rigid body representation. This and the cube function will let you build a lot o
 physics worlds. You'll probably need another function for the creation of OBB cubes too.
 
 */
-GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius, float inverseMass) {
-	GameObject* sphere = new GameObject();
+GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius, float inverseMass, bool hollow) {
+	GameObject* sphere = new GameObject("Sphere");
 
 	Vector3 sphereSize = Vector3(radius, radius, radius);
 	SphereVolume* volume = new SphereVolume(radius);
@@ -374,7 +392,11 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
 
 	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
-	sphere->GetPhysicsObject()->InitSphereInertia();
+
+	if (hollow)
+		sphere->GetPhysicsObject()->InitHollowSphereInertia();
+	else
+		sphere->GetPhysicsObject()->InitSphereInertia();
 
 	world->AddGameObject(sphere);
 
@@ -382,7 +404,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 }
 
 GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
-	GameObject* cube = new GameObject();
+	GameObject* cube = new GameObject("Cube");
 
 	AABBVolume* volume = new AABBVolume(dimensions);
 
@@ -407,7 +429,7 @@ GameObject* TutorialGame::AddGooseToWorld(const Vector3& position)
 	float size			= 1.0f;
 	float inverseMass	= 1.0f;
 
-	GameObject* goose = new GameObject();
+	GameObject* goose = new GameObject("Goose");
 
 
 	SphereVolume* volume = new SphereVolume(size);
@@ -432,7 +454,7 @@ GameObject* TutorialGame::AddParkKeeperToWorld(const Vector3& position)
 	float meshSize = 4.0f;
 	float inverseMass = 0.5f;
 
-	GameObject* keeper = new GameObject();
+	GameObject* keeper = new GameObject("Park Keeper");
 
 	AABBVolume* volume = new AABBVolume(Vector3(0.3, 0.9f, 0.3) * meshSize);
 	keeper->SetBoundingVolume((CollisionVolume*)volume);
@@ -465,7 +487,7 @@ GameObject* TutorialGame::AddCharacterToWorld(const Vector3& position) {
 		minVal.y = min(minVal.y, i.y);
 	}
 
-	GameObject* character = new GameObject();
+	GameObject* character = new GameObject("Character");
 
 	float r = rand() / (float)RAND_MAX;
 
@@ -488,7 +510,7 @@ GameObject* TutorialGame::AddCharacterToWorld(const Vector3& position) {
 }
 
 GameObject* TutorialGame::AddAppleToWorld(const Vector3& position) {
-	GameObject* apple = new GameObject();
+	GameObject* apple = new GameObject("Apple");
 
 	SphereVolume* volume = new SphereVolume(0.7f);
 	apple->SetBoundingVolume((CollisionVolume*)volume);

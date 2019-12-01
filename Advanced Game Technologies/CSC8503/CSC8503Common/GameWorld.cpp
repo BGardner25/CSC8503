@@ -88,14 +88,13 @@ void GameWorld::UpdateQuadTree() {
 bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObject) const {
 	//The simplest raycast just goes through each object and sees if there's a collision
 	RayCollision collision;
-
 	for (auto& i : gameObjects) {
 		if (!i->GetBoundingVolume()) { //objects might not be collideable etc...
 			continue;
 		}
 		RayCollision thisCollision;
 		if (CollisionDetection::RayIntersection(r, *i, thisCollision)) {
-				
+			
 			if (!closestObject) {	
 				closestCollision		= collision;
 				closestCollision.node = i;

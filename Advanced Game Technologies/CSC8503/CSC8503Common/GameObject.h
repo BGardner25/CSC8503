@@ -12,6 +12,11 @@ using std::vector;
 
 namespace NCL {
 	namespace CSC8503 {
+		// for layer based collision detection
+		/*enum class Layer {
+			NONE, ONE, TWO, THREE
+		};*/
+
 		class NetworkObject;
 
 		class GameObject	{
@@ -75,6 +80,9 @@ namespace NCL {
 
 			void UpdateBroadphaseAABB();
 
+			/*void SetLayer(Layer layer) { this->layer = layer; }
+			Layer GetLayer() const { return layer; }*/
+
 		protected:
 			Transform			transform;
 
@@ -87,6 +95,8 @@ namespace NCL {
 			string	name;
 
 			Vector3 broadphaseAABB;
+
+			//Layer layer;
 		};
 	}
 }
