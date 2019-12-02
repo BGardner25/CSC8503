@@ -119,10 +119,11 @@ bool CollisionDetection::RaySphereIntersection(const Ray&r, const Transform& wor
 	if (sphereDist > sphereRadius)
 		return false;
 
-	float sNorm = sphereDist / sphereRadius;
-	sNorm = cos(DegreesToRadians(sNorm * 90.0f));
+	float offset = sqrt((sphereRadius * sphereRadius) - (sphereDist * sphereDist));
 
-	collision.rayDistance = sphereProj - (sphereRadius * sNorm);
+	//collision.rayDistance = sphereProj - (sphereRadius * sNorm);
+	// added later
+	collision.rayDistance = sphereProj - offset;
 	collision.collidedAt = r.GetPosition() + (r.GetDirection() * collision.rayDistance);
 
 	return true;
@@ -277,6 +278,7 @@ bool CollisionDetection::AABBSphereIntersection(const AABBVolume& volumeA, const
 	return false;
 }
 
+// TODO
 bool CollisionDetection::OBBIntersection(
 	const OBBVolume& volumeA, const Transform& worldTransformA,
 	const OBBVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {

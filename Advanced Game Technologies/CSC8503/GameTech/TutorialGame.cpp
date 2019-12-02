@@ -341,6 +341,17 @@ void TutorialGame::InitWorld() {
 	AddSphereToWorld(Vector3(0, 10, -10), 2.0f, 10.0f, true);
 	AddSphereToWorld(Vector3(0, 10, -20), 2.0f, 10.0f, false);
 
+	/*
+	GameObject* rubberSphere = AddSphereToWorld(Vector3(-10, 20, -10), 2.0f, 10.0f, false);
+	GameObject* steelSphere = AddSphereToWorld(Vector3(-10, 20, -20), 2.0f, 10.0f, false);
+
+	PhysicsObject* rPhys = rubberSphere->GetPhysicsObject();
+	PhysicsObject* sPhys = steelSphere->GetPhysicsObject();
+
+	rPhys->SetElasticity(0.95);
+	sPhys->SetElasticity(0.20);
+	*/
+
 	// second floor... initmixedgridworld adds floor also
 	//AddFloorToWorld(Vector3(0, -2, 0));
 }

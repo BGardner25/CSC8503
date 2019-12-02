@@ -219,8 +219,11 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	Vector3 inertiaB = Vector3::Cross(physB->GetInertiaTensor() * Vector3::Cross(relativeB, p.normal), relativeB);
 
 	float angularEffect = Vector3::Dot(inertiaA + inertiaB, p.normal);
+	
+	// disperse some kinetic energy
+	//float cRestitution = 0.66f;
+	float cRestitution = physA->GetElasticity() * physB->GetElasticity();
 
-	float cRestitution = 0.66f;		// disperse some kinetic energy
 
 	float j = (-(1.0f + cRestitution) * impulseForce) / (totalMass + angularEffect);
 
@@ -327,6 +330,8 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		Vector3 linearVel = object->GetLinearVelocity();
 		position += linearVel * dt;		// integrate velocity
 		transform.SetLocalPosition(position);
+		// added later
+		transform.SetWorldPosition(position);
 
 		// linear damping - simulate drag/air resistance by reducing linearVelocity each frame
 		linearVel = linearVel * frameDamping;
