@@ -63,6 +63,13 @@ TutorialGame::~TutorialGame()	{
 	delete physics;
 	delete renderer;
 	delete world;
+
+	delete home;
+	delete goose;
+	delete lake;
+	delete land;
+	// change this to array delete if this becomes array...
+	delete apple;
 }
 
 void TutorialGame::UpdateGame(float dt) {
@@ -330,7 +337,11 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
 
-	InitMixedGridWorld(10, 10, 3.5f, 3.5f);
+	home = AddFloorToWorld(Vector3(0, 0, 0), Vector3(10, 2, 10));
+
+	goose = AddGooseToWorld(GOOSE_SPAWN);
+
+	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
 	AddGooseToWorld(Vector3(30, 2, 0));
 	AddAppleToWorld(Vector3(35, 2, 0));
 
@@ -341,7 +352,7 @@ void TutorialGame::InitWorld() {
 	AddSphereToWorld(Vector3(0, 10, -10), 2.0f, 10.0f, true);
 	AddSphereToWorld(Vector3(0, 10, -20), 2.0f, 10.0f, false);
 
-	/*
+	
 	GameObject* rubberSphere = AddSphereToWorld(Vector3(-10, 20, -10), 2.0f, 10.0f, false);
 	GameObject* steelSphere = AddSphereToWorld(Vector3(-10, 20, -20), 2.0f, 10.0f, false);
 
@@ -363,13 +374,12 @@ void TutorialGame::InitWorld() {
 A single function to add a large immoveable cube to the bottom of our world
 
 */
-GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
+GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimensions) {
 	GameObject* floor = new GameObject("Floor");
 
-	Vector3 floorSize = Vector3(100, 2, 100);
-	AABBVolume* volume = new AABBVolume(floorSize);
+	AABBVolume* volume = new AABBVolume(dimensions);
 	floor->SetBoundingVolume((CollisionVolume*)volume);
-	floor->GetTransform().SetWorldScale(floorSize);
+	floor->GetTransform().SetWorldScale(dimensions);
 	floor->GetTransform().SetWorldPosition(position);
 
 	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader));
