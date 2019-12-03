@@ -337,9 +337,24 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
 
-	home = AddFloorToWorld(Vector3(0, 0, 0), Vector3(10, 2, 10));
-	lake = AddFloorToWorld(Vector3(0, -1, -40), Vector3(40, 1, 30), "Lake");
+	home = AddFloorToWorld(Vector3(0, 1, -40), Vector3(10, 1, 10));
+	lake = AddFloorToWorld(Vector3(0, -1, -40), Vector3(40, 1, 50), "Lake");
 	goose = AddGooseToWorld(GOOSE_SPAWN);
+	AddWallToWorld(Vector3(0, 4, 12), Vector3(40, 6, 2));
+	AddWallToWorld(Vector3(-41, 4, -40), Vector3(1, 6, 50));
+	AddWallToWorld(Vector3(41, 4, -40), Vector3(1, 6, 50));
+
+	land = AddFloorToWorld(Vector3(0, 0, -290), Vector3(200, 2, 200));
+	// left wall
+	AddWallToWorld(Vector3(-202, 8, -290), Vector3(2, 10, 200));
+	// right wall
+	AddWallToWorld(Vector3(202, 8, -290), Vector3(2, 10, 200));
+	// back wall
+	AddWallToWorld(Vector3(0, 8, -492), Vector3(200, 10, 2));
+	// left front wall
+	AddWallToWorld(Vector3(-122, 8, -88), Vector3(80, 10, 2));
+	// right front wall
+	AddWallToWorld(Vector3(122, 8, -88), Vector3(80, 10, 2));
 
 	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
 	AddGooseToWorld(Vector3(30, 2, 0));
@@ -391,6 +406,25 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimen
 	world->AddGameObject(floor);
 
 	return floor;
+}
+
+GameObject* TutorialGame::AddWallToWorld(const Vector3& position, Vector3 dimensions, string name) {
+	GameObject* wall = new GameObject(name);
+
+	AABBVolume* volume = new AABBVolume(dimensions);
+	wall->SetBoundingVolume((CollisionVolume*)volume);
+	wall->GetTransform().SetWorldScale(dimensions);
+	wall->GetTransform().SetWorldPosition(position);
+
+	wall->SetRenderObject(new RenderObject(&wall->GetTransform(), cubeMesh, basicTex, basicShader));
+	wall->SetPhysicsObject(new PhysicsObject(&wall->GetTransform(), wall->GetBoundingVolume()));
+
+	wall->GetPhysicsObject()->SetInverseMass(0);
+	wall->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(wall);
+
+	return wall;
 }
 
 /*

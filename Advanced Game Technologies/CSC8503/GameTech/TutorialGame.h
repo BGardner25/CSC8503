@@ -38,6 +38,7 @@ namespace NCL {
 			void LockedCameraMovement();
 
 			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Floor");
+			GameObject* AddWallToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Wall");
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f, bool hollow = false);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
 			//IT'S HAPPENING
@@ -85,7 +86,7 @@ namespace NCL {
 			GameObject* apple = nullptr;
 
 			// fence, gate, trampoline etc
-			const Vector3 GOOSE_SPAWN = Vector3(0, 3, 0);
+			const Vector3 GOOSE_SPAWN = Vector3(0, 3, -40);
 		};
 	}
 }
