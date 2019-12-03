@@ -61,6 +61,8 @@ int main() {
 
 	TutorialGame* g = new TutorialGame();
 
+	bool isWireFrame = false;
+
 	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE)) {
 		float dt = w->GetTimer()->GetTimeDeltaSeconds();
 
@@ -73,6 +75,10 @@ int main() {
 		}
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NEXT)) {
 			w->ShowConsole(false);
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::INSERT)) {
+			isWireFrame = !isWireFrame;
+			isWireFrame ? glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) : glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 
 		DisplayPathfinding();

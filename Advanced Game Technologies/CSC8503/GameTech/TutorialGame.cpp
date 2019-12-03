@@ -338,7 +338,7 @@ void TutorialGame::InitWorld() {
 	physics->Clear();
 
 	home = AddFloorToWorld(Vector3(0, 0, 0), Vector3(10, 2, 10));
-
+	lake = AddFloorToWorld(Vector3(0, -1, -40), Vector3(40, 1, 30), "Lake");
 	goose = AddGooseToWorld(GOOSE_SPAWN);
 
 	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
@@ -374,8 +374,8 @@ void TutorialGame::InitWorld() {
 A single function to add a large immoveable cube to the bottom of our world
 
 */
-GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimensions) {
-	GameObject* floor = new GameObject("Floor");
+GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimensions, string name) {
+	GameObject* floor = new GameObject(name);
 
 	AABBVolume* volume = new AABBVolume(dimensions);
 	floor->SetBoundingVolume((CollisionVolume*)volume);
