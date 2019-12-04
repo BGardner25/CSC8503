@@ -1,7 +1,9 @@
 #pragma once
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/PhysicsSystem.h"
-
+#include "../CSC8503Common/StateMachine.h"
+#include "../CSC8503Common/StateTransition.h"
+#include "../CSC8503Common/State.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -76,6 +78,8 @@ namespace NCL {
 			void LockCameraToObject(GameObject* o) {
 				lockedObject = o;
 			}
+
+			StateMachine* stateMachine;
 		};
 	}
 }

@@ -14,6 +14,7 @@ TutorialGame::TutorialGame()	{
 	world		= new GameWorld();
 	renderer	= new GameTechRenderer(*world);
 	physics		= new PhysicsSystem(*world);
+	stateMachine = new StateMachine();
 
 	forceMagnitude	= 10.0f;
 	useGravity		= false;
@@ -63,6 +64,8 @@ TutorialGame::~TutorialGame()	{
 	delete physics;
 	delete renderer;
 	delete world;
+
+	delete stateMachine;
 }
 
 void TutorialGame::UpdateGame(float dt) {
@@ -301,18 +304,26 @@ void TutorialGame::MoveSelectedObject() {
 			if (closestCollision.node == selectionObject)
 				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
 	}
+	// just for now
+	float scale = 50.0f;
 	if (inSelectionMode) {
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * 100.0f);
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * scale);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * 100.0f);
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * scale);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * 100.0f);
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * scale);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * 100.0f);
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * scale);
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SPACE)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 1, 0) * scale * 0.2);
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SHIFT)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -1, 0) * scale * 0.2);
 		}
 	}
 }
@@ -330,7 +341,8 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
 
-	InitMixedGridWorld(10, 10, 3.5f, 3.5f);
+	//InitMixedGridWorld(10, 10, 3.5f, 3.5f);
+	AddFloorToWorld(Vector3(0, -2, 0));
 	AddGooseToWorld(Vector3(30, 2, 0));
 	AddAppleToWorld(Vector3(35, 2, 0));
 
@@ -341,19 +353,14 @@ void TutorialGame::InitWorld() {
 	AddSphereToWorld(Vector3(0, 10, -10), 2.0f, 10.0f, true);
 	AddSphereToWorld(Vector3(0, 10, -20), 2.0f, 10.0f, false);
 
-	/*
-	GameObject* rubberSphere = AddSphereToWorld(Vector3(-10, 20, -10), 2.0f, 10.0f, false);
-	GameObject* steelSphere = AddSphereToWorld(Vector3(-10, 20, -20), 2.0f, 10.0f, false);
+	GameObject* rubberSphere = AddSphereToWorld(Vector3(-10, 100, -10), 1.0f, 10.0f, false);
+	GameObject* steelSphere = AddSphereToWorld(Vector3(-10, 100, -20), 2.0f, 20.0f, false);
 
 	PhysicsObject* rPhys = rubberSphere->GetPhysicsObject();
 	PhysicsObject* sPhys = steelSphere->GetPhysicsObject();
 
-	rPhys->SetElasticity(0.95);
-	sPhys->SetElasticity(0.20);
-	*/
-
-	// second floor... initmixedgridworld adds floor also
-	//AddFloorToWorld(Vector3(0, -2, 0));
+	rPhys->SetElasticity(0.99);
+	sPhys->SetElasticity(0.10);
 }
 
 //From here on it's functions to add in objects to the world!

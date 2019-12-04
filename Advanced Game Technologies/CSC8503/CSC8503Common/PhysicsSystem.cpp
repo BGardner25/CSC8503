@@ -60,7 +60,7 @@ void PhysicsSystem::Update(float dt) {
 		iterationDt = 1.0f / 15.0f; //it'll just have to run bigger timesteps...
 		//std::cout << "Setting physics iterations to 15" << iterationDt << std::endl;
 	}
-	else if (dTOffset > 4  * iterationDt) { //the physics engine cant catch up!
+	else if (dTOffset > 4 * iterationDt) { //the physics engine cant catch up!
 		iterationDt = 1.0f / 30.0f; //it'll just have to run bigger timesteps...
 		//std::cout << "Setting iteration dt to 4 case " << iterationDt << std::endl;
 	}
@@ -197,6 +197,9 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 
 	float totalMass = physA->GetInverseMass() + physB->GetInverseMass();
 
+	if (totalMass == 0.0f)
+		return;
+
 	// separate using projection
 	transformA.SetWorldPosition(transformA.GetWorldPosition() - (p.normal * p.penetration * (physA->GetInverseMass() / totalMass)));
 	transformB.SetWorldPosition(transformB.GetWorldPosition() + (p.normal * p.penetration * (physB->GetInverseMass() / totalMass)));
@@ -213,6 +216,9 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	Vector3 contactVelocity = fullVelocityB - fullVelocityA;
 
 	float impulseForce = Vector3::Dot(contactVelocity, p.normal);
+
+	if (impulseForce > 0)
+		return;
 
 	// work out inertia
 	Vector3 inertiaA = Vector3::Cross(physA->GetInertiaTensor() * Vector3::Cross(relativeA, p.normal), relativeA);
@@ -274,8 +280,10 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 
 	for (auto i = first; i != last; ++i) {
 		PhysicsObject* object = (*i)->GetPhysicsObject();
+
+		// GameObject doesn't have physics object
 		if (object == nullptr)
-			continue;	// GameObject doesn't have physics object
+			continue;
 		
 		float inverseMass = object->GetInverseMass();
 
@@ -283,14 +291,14 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 		Vector3 force = object->GetForce();
 		Vector3 accel = force * inverseMass;
 
-		// don't do this for objects that can't be moved
+		// don't apply gravity for objects that can't be moved
 		if (applyGravity && inverseMass > 0)
 			accel += gravity;
 
-		linearVel += accel * dt;	// integrate acceleration
+		// integrate acceleration
+		linearVel += accel * dt;
 		object->SetLinearVelocity(linearVel);
 
-		
 		// angular calculations
 		Vector3 torque = object->GetTorque();
 		Vector3 angVel = object->GetAngularVelocity();
