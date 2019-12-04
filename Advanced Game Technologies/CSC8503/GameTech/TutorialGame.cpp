@@ -66,6 +66,9 @@ TutorialGame::~TutorialGame()	{
 	delete world;
 
 	delete stateMachine;
+
+	delete rubberSphere;
+	delete steelSphere;
 }
 
 void TutorialGame::UpdateGame(float dt) {
@@ -353,14 +356,35 @@ void TutorialGame::InitWorld() {
 	AddSphereToWorld(Vector3(0, 10, -10), 2.0f, 10.0f, true);
 	AddSphereToWorld(Vector3(0, 10, -20), 2.0f, 10.0f, false);
 
-	GameObject* rubberSphere = AddSphereToWorld(Vector3(-10, 100, -10), 1.0f, 10.0f, false);
-	GameObject* steelSphere = AddSphereToWorld(Vector3(-10, 100, -20), 2.0f, 20.0f, false);
+	rubberSphere = AddSphereToWorld(Vector3(-10, 10, -10), 1.0f, 10.0f, false);
+	steelSphere = AddSphereToWorld(Vector3(-10, 10, -20), 2.0f, 20.0f, false);
 
 	PhysicsObject* rPhys = rubberSphere->GetPhysicsObject();
 	PhysicsObject* sPhys = steelSphere->GetPhysicsObject();
 
 	rPhys->SetElasticity(0.99);
 	sPhys->SetElasticity(0.10);
+}
+
+void TutorialGame::TestStateMachine() {
+
+	PhysicsObject* sPhys = steelSphere->GetPhysicsObject();
+
+	StateFunc idleFunc = [](void* object) {
+		PhysicsObject* sPhys = (PhysicsObject*)object;
+		sPhys->ClearForces();
+	};
+
+	StateFunc chaseFunc = [](void* object) {
+		PhysicsObject* sPhys = (PhysicsObject*)object;
+		//sPhys->AddForce();
+	};
+
+	GenericState* idleState = new GenericState(idleFunc, (PhysicsObject*)&sPhys);	
+	GenericState* chaseState = new GenericState(chaseFunc, (PhysicsObject*)&sPhys);	
+
+	stateMachine->AddState(idleState);
+	stateMachine->AddState(chaseState);
 }
 
 //From here on it's functions to add in objects to the world!

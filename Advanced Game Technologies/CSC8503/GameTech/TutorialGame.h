@@ -79,7 +79,12 @@ namespace NCL {
 				lockedObject = o;
 			}
 
+			GameObject* rubberSphere;
+			GameObject* steelSphere;
+
 			StateMachine* stateMachine;
+
+			void TestStateMachine();
 		};
 	}
 }
