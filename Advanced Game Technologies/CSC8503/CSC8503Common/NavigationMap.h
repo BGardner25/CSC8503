@@ -4,8 +4,7 @@
 namespace NCL {
 	using namespace NCL::Maths;
 	namespace CSC8503 {
-		class NavigationMap
-		{
+		class NavigationMap {
 		public:
 			NavigationMap() {}
 			~NavigationMap() {}
