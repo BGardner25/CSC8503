@@ -87,6 +87,8 @@ namespace NCL {
 
 			// fence, gate, trampoline etc
 			const Vector3 GOOSE_SPAWN = Vector3(0, 3, -40);
+
+			int appleCount = 0;
 		};
 	}
 }

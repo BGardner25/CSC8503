@@ -79,7 +79,8 @@ void TutorialGame::UpdateGame(float dt) {
 	if (lockedObject != nullptr) {
 		LockedCameraMovement();
 	}
-
+	// TEMPORARY
+	appleCount = physics->physAppleCount;
 	UpdateKeys();
 
 	if (useGravity) {
@@ -88,6 +89,8 @@ void TutorialGame::UpdateGame(float dt) {
 	else {
 		Debug::Print("(G)ravity off", Vector2(10, 40));
 	}
+
+	renderer->DrawString("Apples:" + std::to_string(appleCount), Vector2(10, 0));
 
 	SelectObject();
 	MoveSelectedObject();
@@ -247,7 +250,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	if (inSelectionMode) {
-		renderer->DrawString("Press Q to change to camera mode!", Vector2(10, 0));
+		//renderer->DrawString("Press Q to change to camera mode!", Vector2(10, 0));
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
 			if (selectionObject) {	//set colour to deselected;
@@ -279,7 +282,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	else {
-		renderer->DrawString("Press Q to change to select mode!", Vector2(10, 0));
+		//renderer->DrawString("Press Q to change to select mode!", Vector2(10, 0));
 	}
 	return false;
 }
@@ -309,17 +312,24 @@ void TutorialGame::MoveSelectedObject() {
 				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
 	}
 	if (inSelectionMode) {
+		float scale = 50.0f;
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * 100.0f);
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * scale);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * 100.0f);
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * scale);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * 100.0f);
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * scale);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * 100.0f);
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * scale);
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SPACE)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 1, 0) * scale * 0.4);
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SHIFT)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -1, 0) * scale * 0.4);
 		}
 	}
 }
@@ -337,9 +347,10 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
 
+	/****************LEVEL FOUNDATION*****************/
 	home = AddFloorToWorld(Vector3(0, 1, -40), Vector3(10, 1, 10));
 	lake = AddFloorToWorld(Vector3(0, -1, -40), Vector3(40, 1, 50), "Lake");
-	goose = AddGooseToWorld(GOOSE_SPAWN);
+
 	AddWallToWorld(Vector3(0, 4, 12), Vector3(40, 6, 2));
 	AddWallToWorld(Vector3(-41, 4, -40), Vector3(1, 6, 50));
 	AddWallToWorld(Vector3(41, 4, -40), Vector3(1, 6, 50));
@@ -355,7 +366,11 @@ void TutorialGame::InitWorld() {
 	AddWallToWorld(Vector3(-122, 8, -88), Vector3(80, 10, 2));
 	// right front wall
 	AddWallToWorld(Vector3(122, 8, -88), Vector3(80, 10, 2));
+	/*************************************************/
 
+	goose = AddGooseToWorld(GOOSE_SPAWN);
+
+	apple = AddAppleToWorld(Vector3(25, 5, -100));
 	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
 	AddGooseToWorld(Vector3(30, 2, 0));
 	AddAppleToWorld(Vector3(35, 2, 0));

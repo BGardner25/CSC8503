@@ -22,6 +22,8 @@ namespace NCL {
 			}
 
 			void SetGravity(const Vector3& g);
+			// TEMPORARY
+			int physAppleCount = 0;
 		protected:
 			void BasicCollisionDetection();
 			void BroadPhase();
