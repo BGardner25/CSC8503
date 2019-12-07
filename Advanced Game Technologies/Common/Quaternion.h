@@ -117,11 +117,11 @@ namespace NCL {
 		};
 
 		std::ostream& operator<<(std::ostream& o, const Quaternion& q) {
-			o	<< "Quaternion("
+			o	<< "Quaternion(("
 				<< q.x; o << ","
 				<< q.y; o << ","
-				<< q.z; o << ","
-				<< q.w;
+				<< q.z; o << "),"
+				<< q.w << ")";
 			return o;
 		}
 

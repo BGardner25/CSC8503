@@ -36,6 +36,7 @@ namespace NCL {
 			void DebugObjectMovement();
 			void LockedObjectMovement();
 			void LockedCameraMovement();
+			void PlayerMovement();
 
 			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Floor");
 			GameObject* AddWallToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Wall");
@@ -57,6 +58,7 @@ namespace NCL {
 			GameWorld*			world;
 
 			bool useGravity;
+			bool useBroadPhase;
 			bool inSelectionMode;
 
 			float		forceMagnitude;
@@ -101,6 +103,8 @@ namespace NCL {
 			int applesCollected = 0;
 			int bonusCount = 0;
 			int bonusCollected = 0;
+
+			Vector4 originalColour = Vector4(1, 1, 1, 1);
 		};
 	}
 }

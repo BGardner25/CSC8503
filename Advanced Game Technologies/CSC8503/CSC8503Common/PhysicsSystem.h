@@ -17,12 +17,16 @@ namespace NCL {
 				applyGravity = state;
 			}
 
+			void UseBroadPhase(bool state) {
+				useBroadPhase = state;
+			}
+
 			void SetGlobalDamping(float d) {
 				globalDamping = d;
 			}
 
 			void SetGravity(const Vector3& g);
-			// TEMPORARY
+			// @TODO TEMPORARY
 			int physAppleCount = 0;
 		protected:
 			void BasicCollisionDetection();

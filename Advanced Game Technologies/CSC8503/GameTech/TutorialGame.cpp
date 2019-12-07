@@ -17,6 +17,7 @@ TutorialGame::TutorialGame()	{
 
 	forceMagnitude	= 10.0f;
 	useGravity		= false;
+	useBroadPhase	= true;
 	inSelectionMode = false;
 
 	Debug::SetRenderer(renderer);
@@ -92,11 +93,18 @@ void TutorialGame::UpdateGame(float dt) {
 	else {
 		Debug::Print("(G)ravity off", Vector2(10, 40));
 	}
+	if (useBroadPhase) {
+		Debug::Print("Broadphase on", Vector2(20, 60));
+	}
+	else {
+		Debug::Print("Broadphase off", Vector2(20, 60));
+	}
 
 	renderer->DrawString("Apples:" + std::to_string(appleCount), Vector2(10, 0));
 
 	SelectObject();
 	MoveSelectedObject();
+	PlayerMovement();
 
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
@@ -119,6 +127,10 @@ void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
 		useGravity = !useGravity; //Toggle gravity!
 		physics->UseGravity(useGravity);
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::B)) {
+		useBroadPhase = !useBroadPhase;
+		physics->UseBroadPhase(useBroadPhase);
 	}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
@@ -187,7 +199,7 @@ void  TutorialGame::LockedCameraMovement() {
 		Quaternion q(modelMat);
 		Vector3 angles = q.ToEuler(); //nearly there now!
 
-		world->GetMainCamera()->SetPosition(camPos);
+		world->GetMainCamera()->SetPosition(camPos + Vector3(0,10,10));
 		world->GetMainCamera()->SetPitch(angles.x);
 		world->GetMainCamera()->SetYaw(angles.y);
 	}
@@ -232,6 +244,42 @@ void TutorialGame::DebugObjectMovement() {
 	}
 }
 
+void TutorialGame::PlayerMovement() {
+	if (inSelectionMode) {
+		float scale = 200.0f;
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
+			Quaternion orientation = Quaternion(Vector3(0, 1, 0), 0.0f);
+			orientation.Normalise();
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * scale);
+			goose->GetTransform().SetLocalOrientation(orientation);
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
+			Quaternion orientation = Quaternion(Vector3(0, 1, 0), -1.0f);
+			orientation.Normalise();
+			goose->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * scale);
+			goose->GetTransform().SetLocalOrientation(orientation);
+			//goose->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
+			//std::cout << goose->GetTransform().GetWorldOrientation() << std::endl;
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
+			Quaternion orientation = Quaternion(Vector3(0, 1, 0), 180.0f);
+			orientation.Normalise();
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * scale);
+			goose->GetTransform().SetLocalOrientation(orientation);
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
+			Quaternion orientation = Quaternion(Vector3(0, 1, 0), 1.0f);
+			orientation.Normalise();
+			goose->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * scale);
+			goose->GetTransform().SetLocalOrientation(orientation);
+		}
+		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::SPACE))
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 1, 0) * scale * 20);
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SHIFT))
+			goose->GetPhysicsObject()->AddForce(Vector3(0, -1, 0) * scale * 0.4);
+	}
+}
+
 /*
 
 Every frame, this code will let you perform a raycast, to see if there's an object
@@ -256,8 +304,9 @@ bool TutorialGame::SelectObject() {
 		//renderer->DrawString("Press Q to change to camera mode!", Vector2(10, 0));
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
+			
 			if (selectionObject) {	//set colour to deselected;
-				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
+				selectionObject->GetRenderObject()->SetColour(originalColour);
 				selectionObject = nullptr;
 			}
 
@@ -266,6 +315,7 @@ bool TutorialGame::SelectObject() {
 			RayCollision closestCollision;
 			if (world->Raycast(ray, closestCollision, true)) {
 				selectionObject = (GameObject*)closestCollision.node;
+				originalColour = selectionObject->GetRenderObject()->GetColour();
 				selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 				return true;
 			}
@@ -315,25 +365,19 @@ void TutorialGame::MoveSelectedObject() {
 				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
 	}
 	if (inSelectionMode) {
-		float scale = 200.0f;
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * scale);
-		}
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * scale);
-		}
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
+		/*float scale = 200.0f;
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W))
 			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * scale);
-		}
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A))
 			selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * scale);
-		}
-		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::SPACE)) {
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S))
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * scale);
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D))
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * scale);
+		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::SPACE))
 			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 1, 0) * scale * 20);
-		}
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SHIFT)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -1, 0) * scale * 0.4);
-		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SHIFT))
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -1, 0) * scale * 0.4);*/
 	}
 }
 
@@ -387,9 +431,9 @@ void TutorialGame::InitWorld() {
 	apple[4] = AddAppleToWorld(Vector3(-160, 3, -450));
 
 	// near home
-	bonusItem[0] = AddCubeToWorld(Vector3(35, 2, 5), Vector3(0.8, 0.8, 0.8), 10.0f, true);
+	bonusItem[0] = AddCubeToWorld(Vector3(35, 2, -5), Vector3(0.8, 0.8, 0.8), 10.0f, true);
 	// gate area
-	bonusItem[1] = AddCubeToWorld(Vector3(55, 2, -95), Vector3(0.8, 0.8, 0.8), 10.0f, true);
+	bonusItem[1] = AddCubeToWorld(Vector3(190, 2, -120), Vector3(0.8, 0.8, 0.8), 10.0f, true);
 	// maze
 	bonusItem[2] = AddCubeToWorld(Vector3(-64, 2, -329), Vector3(0.8, 0.8, 0.8), 10.0f, true);
 	// jump puzzle
@@ -447,11 +491,8 @@ void TutorialGame::InitWorld() {
 	AddWallToWorld(Vector3(105, 5, -461), Vector3(6, 3, 1));
 	AddWallToWorld(Vector3(110, 5, -450), Vector3(1, 3, 10));
 
-	AddWallToWorld(Vector3(116, 5, -441), Vector3(5, 3, 1));
-	AddWallToWorld(Vector3(122, 5, -436), Vector3(1, 3, 6));
-	AddWallToWorld(Vector3(116, 5, -431), Vector3(5, 3, 1));
 	// @TODO make this harder to push
-	AddCubeToWorld(Vector3(105.5, 4, -436.5), Vector3(5, 2, 3), 100.0f);
+	AddCubeToWorld(Vector3(105.5, 4, -436.5), Vector3(5, 2, 3));
 	/*************************************************/
 
 	/*******************JUMPING PUZZLE****************/
