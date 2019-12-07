@@ -40,12 +40,16 @@ namespace NCL {
 			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Floor");
 			GameObject* AddWallToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Wall");
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f, bool hollow = false);
-			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
+			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, bool collectable = false);
 			//IT'S HAPPENING
 			GameObject* AddGooseToWorld(const Vector3& position);
 			GameObject* AddParkKeeperToWorld(const Vector3& position);
 			GameObject* AddCharacterToWorld(const Vector3& position);
 			GameObject* AddAppleToWorld(const Vector3& position);
+			GameObject* AddLakeToWorld(const Vector3& position, Vector3 dimensions, string name = "Lake");
+			GameObject* AddGateToWorld(const Vector3& position, Vector3 dimensions, string name = "Gate");
+			GameObject* AddTrampolineToWorld(const Vector3& position, Vector3 dimensions, string name = "Trampoline");
+			GameObject* AddPlatformToWorld(const Vector3& position, Vector3 dimensions, string name = "Platform");
 
 
 			GameTechRenderer*	renderer;
@@ -80,15 +84,23 @@ namespace NCL {
 
 			GameObject* home = nullptr;
 			GameObject* goose = nullptr;
+			GameObject* sentry = nullptr;
 			GameObject* lake = nullptr;
 			GameObject* land = nullptr;
-			// maybe array or vector of these
-			GameObject* apple = nullptr;
+			GameObject* gate = nullptr;
+			GameObject* apple[5];
+			GameObject* bonusItem[6];
+			GameObject* dynamicCube[3];
+			GameObject* trampoline[2];
 
 			// fence, gate, trampoline etc
 			const Vector3 GOOSE_SPAWN = Vector3(0, 3, -40);
+			const Vector3 SENTRY_SPAWN = Vector3(-180, 3, -470);
 
 			int appleCount = 0;
+			int applesCollected = 0;
+			int bonusCount = 0;
+			int bonusCollected = 0;
 		};
 	}
 }

@@ -68,8 +68,11 @@ TutorialGame::~TutorialGame()	{
 	delete goose;
 	delete lake;
 	delete land;
-	// change this to array delete if this becomes array...
-	delete apple;
+	delete gate;
+	delete[] apple;
+	delete[] bonusItem;
+	delete[] dynamicCube;
+	delete[] trampoline;
 }
 
 void TutorialGame::UpdateGame(float dt) {
@@ -312,7 +315,7 @@ void TutorialGame::MoveSelectedObject() {
 				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
 	}
 	if (inSelectionMode) {
-		float scale = 50.0f;
+		float scale = 200.0f;
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
 			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * scale);
 		}
@@ -325,8 +328,8 @@ void TutorialGame::MoveSelectedObject() {
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
 			selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * scale);
 		}
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SPACE)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 1, 0) * scale * 0.4);
+		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::SPACE)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 1, 0) * scale * 20);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SHIFT)) {
 			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -1, 0) * scale * 0.4);
@@ -348,8 +351,8 @@ void TutorialGame::InitWorld() {
 	physics->Clear();
 
 	/****************LEVEL FOUNDATION*****************/
-	home = AddFloorToWorld(Vector3(0, 1, -40), Vector3(10, 1, 10));
-	lake = AddFloorToWorld(Vector3(0, -1, -40), Vector3(40, 1, 50), "Lake");
+	home = AddFloorToWorld(Vector3(0, 2, -40), Vector3(10, 0.5, 10));
+	lake = AddLakeToWorld(Vector3(0, 0, -40), Vector3(40, 1, 50));
 
 	AddWallToWorld(Vector3(0, 4, 12), Vector3(40, 6, 2));
 	AddWallToWorld(Vector3(-41, 4, -40), Vector3(1, 6, 50));
@@ -368,9 +371,98 @@ void TutorialGame::InitWorld() {
 	AddWallToWorld(Vector3(122, 8, -88), Vector3(80, 10, 2));
 	/*************************************************/
 
+	/***************OBJECTS***************************/
 	goose = AddGooseToWorld(GOOSE_SPAWN);
+	sentry = AddCharacterToWorld(SENTRY_SPAWN);
 
-	apple = AddAppleToWorld(Vector3(25, 5, -100));
+	// gate area
+	apple[0] = AddAppleToWorld(Vector3(120, 3, -150));
+	// maze
+	apple[1] = AddAppleToWorld(Vector3(-95, 3, -225));
+	// trampoline area
+	apple[2] = AddAppleToWorld(Vector3(150, 3, -420));
+	// jumping puzzle
+	apple[3] = AddAppleToWorld(Vector3(30, 9, -435));
+	// near sentry AI
+	apple[4] = AddAppleToWorld(Vector3(-160, 3, -450));
+
+	// near home
+	bonusItem[0] = AddCubeToWorld(Vector3(35, 2, 5), Vector3(0.8, 0.8, 0.8), 10.0f, true);
+	// gate area
+	bonusItem[1] = AddCubeToWorld(Vector3(55, 2, -95), Vector3(0.8, 0.8, 0.8), 10.0f, true);
+	// maze
+	bonusItem[2] = AddCubeToWorld(Vector3(-64, 2, -329), Vector3(0.8, 0.8, 0.8), 10.0f, true);
+	// jump puzzle
+	bonusItem[3] = AddCubeToWorld(Vector3(50, 14, -465), Vector3(0.8, 0.8, 0.8), 10.0f, true);
+	// near sentry AI
+	bonusItem[4] = AddCubeToWorld(Vector3(-175, 2, -450), Vector3(0.8, 0.8, 0.8), 10.0f, true);
+	// trampoline area
+	bonusItem[5] = AddCubeToWorld(Vector3(105, 2, -455), Vector3(0.8, 0.8, 0.8), 10.0f, true);
+	/*************************************************/
+
+	/******************GATE AREA**********************/
+	gate = AddGateToWorld(Vector3(50, 4, -150), Vector3(0.5, 2, 4), "Gate");
+	AddWallToWorld(Vector3(50, 5, -118), Vector3(1, 3, 28));
+	AddWallToWorld(Vector3(50, 5, -169), Vector3(1, 3, 15));
+	AddWallToWorld(Vector3(124.5, 5, -185), Vector3(75.5, 3, 1));
+	/*************************************************/
+
+	/*******************MAZE AREA*********************/
+	AddWallToWorld(Vector3(-120, 5, -160), Vector3(60, 3, 1));
+	AddWallToWorld(Vector3(-61, 5, -246), Vector3(1, 3, 85));
+
+	AddWallToWorld(Vector3(-160, 5, -180), Vector3(40, 3, 1));
+	AddWallToWorld(Vector3(-121, 5, -186), Vector3(1, 3, 5));
+	AddWallToWorld(Vector3(-111, 5, -192), Vector3(11, 3, 1));
+	AddWallToWorld(Vector3(-101, 5, -186), Vector3(1, 3, 5));
+	AddWallToWorld(Vector3(-92, 5, -180), Vector3(10, 3, 1));
+
+	AddWallToWorld(Vector3(-122, 5, -215), Vector3(60, 3, 1));
+	AddWallToWorld(Vector3(-181, 5, -246), Vector3(1, 3, 30));
+	AddWallToWorld(Vector3(-172, 5, -277), Vector3(10, 3, 1));
+	AddWallToWorld(Vector3(-161, 5, -286), Vector3(1, 3, 10));
+	AddWallToWorld(Vector3(-131, 5, -297), Vector3(51, 3, 1));
+
+	AddWallToWorld(Vector3(-140, 5, -310), Vector3(60, 3, 1));
+	AddWallToWorld(Vector3(-81, 5, -321), Vector3(1, 3, 10));
+	AddWallToWorld(Vector3(-71, 5, -332), Vector3(11, 3, 1));
+
+	AddWallToWorld(Vector3(-81, 5, -266), Vector3(1, 3, 30));
+	AddWallToWorld(Vector3(-90, 5, -235), Vector3(10, 3, 1));
+	AddWallToWorld(Vector3(-101, 5, -226), Vector3(1, 3, 10));
+
+	dynamicCube[0] = AddCubeToWorld(Vector3(-71, 6, -170), Vector3(8, 4, 8));
+	dynamicCube[1] = AddCubeToWorld(Vector3(-191, 6, -200), Vector3(8, 4, 8));
+	dynamicCube[2] = AddCubeToWorld(Vector3(-71, 6, -315), Vector3(8, 4, 8));
+	/*************************************************/
+
+	/*******************TRAMPOLINE AREA***************/
+	AddWallToWorld(Vector3(140, 9, -350), Vector3(60, 7, 1));
+	AddWallToWorld(Vector3(81, 9, -420.5), Vector3(1, 7, 69.5));
+	
+	trampoline[0] = AddTrampolineToWorld(Vector3(100, 2.01, -335), Vector3(8, 0.01, 8));
+	trampoline[1] = AddTrampolineToWorld(Vector3(95, 2.01, -365), Vector3(8, 0.01, 8));
+
+	AddWallToWorld(Vector3(100, 5, -450), Vector3(1, 3, 10));
+	AddWallToWorld(Vector3(105, 5, -461), Vector3(6, 3, 1));
+	AddWallToWorld(Vector3(110, 5, -450), Vector3(1, 3, 10));
+
+	AddWallToWorld(Vector3(116, 5, -441), Vector3(5, 3, 1));
+	AddWallToWorld(Vector3(122, 5, -436), Vector3(1, 3, 6));
+	AddWallToWorld(Vector3(116, 5, -431), Vector3(5, 3, 1));
+	// @TODO make this harder to push
+	AddCubeToWorld(Vector3(105.5, 4, -436.5), Vector3(5, 2, 3), 100.0f);
+	/*************************************************/
+
+	/*******************JUMPING PUZZLE****************/
+	AddPlatformToWorld(Vector3(60, 3, -400), Vector3(5, 0.25, 5));
+	AddPlatformToWorld(Vector3(60, 4, -415), Vector3(5, 0.25, 5));
+	AddPlatformToWorld(Vector3(50, 6, -435), Vector3(5, 0.25, 5));
+	AddPlatformToWorld(Vector3(30, 8, -435), Vector3(5, 0.25, 5));
+	AddPlatformToWorld(Vector3(30, 10, -455), Vector3(5, 0.25, 5));
+	AddPlatformToWorld(Vector3(50, 12, -465), Vector3(5, 0.25, 5));
+	/*************************************************/
+
 	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
 	AddGooseToWorld(Vector3(30, 2, 0));
 	AddAppleToWorld(Vector3(35, 2, 0));
@@ -412,7 +504,7 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimen
 	floor->GetTransform().SetWorldScale(dimensions);
 	floor->GetTransform().SetWorldPosition(position);
 
-	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader));
+	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(0.0f, 1.0f, 0.0f, 1.0f)));
 	floor->SetPhysicsObject(new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume()));
 
 	floor->GetPhysicsObject()->SetInverseMass(0);
@@ -423,6 +515,63 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimen
 	return floor;
 }
 
+GameObject* TutorialGame::AddPlatformToWorld(const Vector3& position, Vector3 dimensions, string name) {
+	GameObject* platform = new GameObject(name);
+
+	AABBVolume* volume = new AABBVolume(dimensions);
+	platform->SetBoundingVolume((CollisionVolume*)volume);
+	platform->GetTransform().SetWorldScale(dimensions);
+	platform->GetTransform().SetWorldPosition(position);
+
+	platform->SetRenderObject(new RenderObject(&platform->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.0f, 1.0f, 1.0f)));
+	platform->SetPhysicsObject(new PhysicsObject(&platform->GetTransform(), platform->GetBoundingVolume()));
+
+	platform->GetPhysicsObject()->SetInverseMass(0);
+	platform->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(platform);
+
+	return platform;
+}
+
+GameObject* TutorialGame::AddTrampolineToWorld(const Vector3& position, Vector3 dimensions, string name) {
+	GameObject* trampoline = new GameObject(name);
+
+	AABBVolume* volume = new AABBVolume(dimensions);
+	trampoline->SetBoundingVolume((CollisionVolume*)volume);
+	trampoline->GetTransform().SetWorldScale(dimensions);
+	trampoline->GetTransform().SetWorldPosition(position);
+
+	trampoline->SetRenderObject(new RenderObject(&trampoline->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.0f, 0.0f, 1.0f)));
+	trampoline->SetPhysicsObject(new PhysicsObject(&trampoline->GetTransform(), trampoline->GetBoundingVolume()));
+
+	trampoline->GetPhysicsObject()->SetInverseMass(0);
+	trampoline->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(trampoline);
+
+	return trampoline;
+}
+
+GameObject* TutorialGame::AddLakeToWorld(const Vector3& position, Vector3 dimensions, string name) {
+	GameObject* lake = new GameObject(name);
+
+	AABBVolume* volume = new AABBVolume(dimensions);
+	lake->SetBoundingVolume((CollisionVolume*)volume);
+	lake->GetTransform().SetWorldScale(dimensions);
+	lake->GetTransform().SetWorldPosition(position);
+
+	lake->SetRenderObject(new RenderObject(&lake->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(0.0f, 0.0f, 1.0f, 1.0f)));
+	lake->SetPhysicsObject(new PhysicsObject(&lake->GetTransform(), lake->GetBoundingVolume()));
+
+	lake->GetPhysicsObject()->SetInverseMass(0);
+	lake->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(lake);
+
+	return lake;
+}
+
 GameObject* TutorialGame::AddWallToWorld(const Vector3& position, Vector3 dimensions, string name) {
 	GameObject* wall = new GameObject(name);
 
@@ -431,7 +580,7 @@ GameObject* TutorialGame::AddWallToWorld(const Vector3& position, Vector3 dimens
 	wall->GetTransform().SetWorldScale(dimensions);
 	wall->GetTransform().SetWorldPosition(position);
 
-	wall->SetRenderObject(new RenderObject(&wall->GetTransform(), cubeMesh, basicTex, basicShader));
+	wall->SetRenderObject(new RenderObject(&wall->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.5f, 0.1f, 1.0f)));
 	wall->SetPhysicsObject(new PhysicsObject(&wall->GetTransform(), wall->GetBoundingVolume()));
 
 	wall->GetPhysicsObject()->SetInverseMass(0);
@@ -440,6 +589,25 @@ GameObject* TutorialGame::AddWallToWorld(const Vector3& position, Vector3 dimens
 	world->AddGameObject(wall);
 
 	return wall;
+}
+
+GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimensions, string name) {
+	GameObject* gate = new GameObject(name);
+
+	AABBVolume* volume = new AABBVolume(dimensions);
+	gate->SetBoundingVolume((CollisionVolume*)volume);
+	gate->GetTransform().SetWorldScale(dimensions);
+	gate->GetTransform().SetWorldPosition(position);
+
+	gate->SetRenderObject(new RenderObject(&gate->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.6f, 0.2f, 1.0f)));
+	gate->SetPhysicsObject(new PhysicsObject(&gate->GetTransform(), gate->GetBoundingVolume()));
+
+	gate->GetPhysicsObject()->SetInverseMass(10);
+	gate->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(gate);
+
+	return gate;
 }
 
 /*
@@ -473,8 +641,12 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	return sphere;
 }
 
-GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
-	GameObject* cube = new GameObject("Cube");
+GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool collectable) {
+	string name = "Cube";
+	if (collectable)
+		name = "CollectableCube";
+
+	GameObject* cube = new GameObject(name);
 
 	AABBVolume* volume = new AABBVolume(dimensions);
 
@@ -483,7 +655,10 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	cube->GetTransform().SetWorldPosition(position);
 	cube->GetTransform().SetWorldScale(dimensions);
 
-	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+	if(collectable)
+		cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(0.0f, 0.5f, 0.5f, 1.0f)));
+	else
+		cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 
 	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
@@ -587,7 +762,7 @@ GameObject* TutorialGame::AddAppleToWorld(const Vector3& position) {
 	apple->GetTransform().SetWorldScale(Vector3(4, 4, 4));
 	apple->GetTransform().SetWorldPosition(position);
 
-	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), appleMesh, nullptr, basicShader));
+	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), appleMesh, nullptr, basicShader, Vector4(1.0f, 0.0f, 0.0f, 1.0f)));
 	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
 
 	apple->GetPhysicsObject()->SetInverseMass(1.0f);

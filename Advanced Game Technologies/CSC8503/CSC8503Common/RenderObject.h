@@ -15,7 +15,7 @@ namespace NCL {
 		class RenderObject
 		{
 		public:
-			RenderObject(Transform* parentTransform, MeshGeometry* mesh, TextureBase* tex, ShaderBase* shader);
+			RenderObject(Transform* parentTransform, MeshGeometry* mesh, TextureBase* tex, ShaderBase* shader, Vector4 colour = Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 			~RenderObject();
 
 			void SetDefaultTexture(TextureBase* t) {
