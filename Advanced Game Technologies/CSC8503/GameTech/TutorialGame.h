@@ -37,6 +37,7 @@ namespace NCL {
 			void LockedObjectMovement();
 			void LockedCameraMovement();
 			void PlayerMovement();
+			void InitMisc();
 
 			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Floor");
 			GameObject* AddWallToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Wall");

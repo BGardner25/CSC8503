@@ -18,7 +18,7 @@ TutorialGame::TutorialGame()	{
 	forceMagnitude	= 10.0f;
 	useGravity		= false;
 	useBroadPhase	= true;
-	inSelectionMode = false;
+	inSelectionMode = true;
 
 	Debug::SetRenderer(renderer);
 
@@ -52,6 +52,7 @@ void TutorialGame::InitialiseAssets() {
 
 	InitCamera();
 	InitWorld();
+	InitMisc();
 }
 
 TutorialGame::~TutorialGame()	{
@@ -381,6 +382,16 @@ void TutorialGame::MoveSelectedObject() {
 	}
 }
 
+void TutorialGame::InitMisc() {
+	selectionObject = goose;
+	lockedObject = goose;
+
+	if (inSelectionMode) {
+		Window::GetWindow()->ShowOSPointer(true);
+		Window::GetWindow()->LockMouseToWindow(false);
+	}
+}
+
 void TutorialGame::InitCamera() {
 	world->GetMainCamera()->SetNearPlane(0.5f);
 	world->GetMainCamera()->SetFarPlane(500.0f);
@@ -445,7 +456,7 @@ void TutorialGame::InitWorld() {
 	/*************************************************/
 
 	/******************GATE AREA**********************/
-	gate = AddGateToWorld(Vector3(50, 4, -150), Vector3(0.5, 2, 4), "Gate");
+	gate = AddGateToWorld(Vector3(90, 4, -150), Vector3(0.5, 2, 4), "Gate");
 	AddWallToWorld(Vector3(50, 5, -118), Vector3(1, 3, 28));
 	AddWallToWorld(Vector3(50, 5, -169), Vector3(1, 3, 15));
 	AddWallToWorld(Vector3(124.5, 5, -185), Vector3(75.5, 3, 1));
@@ -503,6 +514,7 @@ void TutorialGame::InitWorld() {
 	AddPlatformToWorld(Vector3(30, 10, -455), Vector3(5, 0.25, 5));
 	AddPlatformToWorld(Vector3(50, 12, -465), Vector3(5, 0.25, 5));
 	/*************************************************/
+
 
 	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
 	AddGooseToWorld(Vector3(30, 2, 0));
@@ -635,10 +647,13 @@ GameObject* TutorialGame::AddWallToWorld(const Vector3& position, Vector3 dimens
 GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimensions, string name) {
 	GameObject* gate = new GameObject(name);
 
-	AABBVolume* volume = new AABBVolume(dimensions);
+	OBBVolume* volume = new OBBVolume(dimensions);
 	gate->SetBoundingVolume((CollisionVolume*)volume);
 	gate->GetTransform().SetWorldScale(dimensions);
 	gate->GetTransform().SetWorldPosition(position);
+	Quaternion orientation = Quaternion(Vector3(0, 0.8, 0), 0.34f);
+	orientation.Normalise();
+	gate->GetTransform().SetLocalOrientation(orientation);
 
 	gate->SetRenderObject(new RenderObject(&gate->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.6f, 0.2f, 1.0f)));
 	gate->SetPhysicsObject(new PhysicsObject(&gate->GetTransform(), gate->GetBoundingVolume()));

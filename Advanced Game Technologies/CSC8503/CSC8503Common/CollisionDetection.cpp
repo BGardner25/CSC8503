@@ -151,12 +151,13 @@ bool CollisionDetection::ObjectIntersection(GameObject* a, GameObject* b, Collis
 	if (volA->type == VolumeType::AABB && volB->type == VolumeType::Sphere)
 		return AABBSphereIntersection((AABBVolume&)*volA, transformA, (SphereVolume&)*volB, transformB, collisionInfo);
 	if (volA->type == VolumeType::Sphere && volB->type == VolumeType::AABB) {
-		// AABBSphereIntersection expects the AABB volume first so must rearrange collisionInfo data
+		// AABBSphereIntersection expects the AABB volume first so rearrange collisionInfo data
 		collisionInfo.a = b;
 		collisionInfo.b = a;
 		return AABBSphereIntersection((AABBVolume&)*volB, transformB, (SphereVolume&)*volA, transformA, collisionInfo);
 	}
-	// @TODO not working
+	if ((volA->type == VolumeType::OBB && volB->type == VolumeType::AABB) || (volB->type == VolumeType::OBB && volA->type == VolumeType::AABB))
+		return AABBIntersection((AABBVolume&)*volA, transformA, (AABBVolume&)*volB, transformB, collisionInfo);
 	if (volA->type == VolumeType::OBB && volB->type == VolumeType::Sphere)
 		return OBBSphereIntersection((OBBVolume&)*volA, transformA, (SphereVolume&)*volB, transformB, collisionInfo);
 	if (volA->type == VolumeType::Sphere && volB->type == VolumeType::OBB) {
@@ -298,7 +299,7 @@ bool CollisionDetection::OBBSphereIntersection(const OBBVolume& volumeA, const T
 	Vector3 boxSize = volumeA.GetHalfDimensions();
 	Vector3 delta = worldTransformB.GetWorldPosition() - worldTransformA.GetWorldPosition();
 
-	// transform direction sphereBox vector into box local space
+	// transform into box local space
 	delta = invTransform * delta;
 
 	Vector3 closestPointOnBox = Maths::Clamp(delta, -boxSize, boxSize);
@@ -306,12 +307,14 @@ bool CollisionDetection::OBBSphereIntersection(const OBBVolume& volumeA, const T
 	float distance = localPoint.Length();
 
 	if (distance < volumeB.GetRadius()) {
-		Vector3 collisionNormal = transform * localPoint.Normalised();
+		Vector3 collisionNormal = localPoint.Normalised();
 		float penetration = (volumeB.GetRadius() - distance);
-		Vector3 localA = Vector3();
+		// move along collision normal by box half sizes
+		Vector3 localA = collisionNormal * volumeA.GetHalfDimensions();
+		// move back along normal by sphere radius
 		Vector3 localB = -collisionNormal * volumeB.GetRadius();
 
-		collisionInfo.AddContactPoint(localA, localB, collisionNormal, penetration);
+		collisionInfo.AddContactPoint(transform * localA, transform * localB, transform * collisionNormal, penetration);
 		return true;
 	}
 
