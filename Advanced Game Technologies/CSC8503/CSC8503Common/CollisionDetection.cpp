@@ -156,7 +156,14 @@ bool CollisionDetection::ObjectIntersection(GameObject* a, GameObject* b, Collis
 		collisionInfo.b = a;
 		return AABBSphereIntersection((AABBVolume&)*volB, transformB, (SphereVolume&)*volA, transformA, collisionInfo);
 	}
-
+	// @TODO not working
+	if (volA->type == VolumeType::OBB && volB->type == VolumeType::Sphere)
+		return OBBSphereIntersection((OBBVolume&)*volA, transformA, (SphereVolume&)*volB, transformB, collisionInfo);
+	if (volA->type == VolumeType::Sphere && volB->type == VolumeType::OBB) {
+		collisionInfo.a = b;
+		collisionInfo.b = a;
+		return OBBSphereIntersection((OBBVolume&)*volB, transformB, (SphereVolume&)*volA, transformA, collisionInfo);
+	}
 	return false;
 }
 
@@ -275,6 +282,39 @@ bool CollisionDetection::AABBSphereIntersection(const AABBVolume& volumeA, const
 		collisionInfo.AddContactPoint(localA, localB, collisionNormal, penetration);
 		return true;
 	}
+	return false;
+}
+
+bool CollisionDetection::OBBSphereIntersection(const OBBVolume& volumeA, const Transform& worldTransformA, 
+	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
+
+	// obb orientation
+	Quaternion orientation = worldTransformA.GetWorldOrientation();
+	Vector3 position = worldTransformA.GetWorldPosition();
+
+	Matrix3 transform = Matrix3(orientation);
+	Matrix3 invTransform = Matrix3(orientation.Conjugate());
+
+	Vector3 boxSize = volumeA.GetHalfDimensions();
+	Vector3 delta = worldTransformB.GetWorldPosition() - worldTransformA.GetWorldPosition();
+
+	// transform direction sphereBox vector into box local space
+	delta = invTransform * delta;
+
+	Vector3 closestPointOnBox = Maths::Clamp(delta, -boxSize, boxSize);
+	Vector3 localPoint = delta - closestPointOnBox;
+	float distance = localPoint.Length();
+
+	if (distance < volumeB.GetRadius()) {
+		Vector3 collisionNormal = transform * localPoint.Normalised();
+		float penetration = (volumeB.GetRadius() - distance);
+		Vector3 localA = Vector3();
+		Vector3 localB = -collisionNormal * volumeB.GetRadius();
+
+		collisionInfo.AddContactPoint(localA, localB, collisionNormal, penetration);
+		return true;
+	}
+
 	return false;
 }
 
