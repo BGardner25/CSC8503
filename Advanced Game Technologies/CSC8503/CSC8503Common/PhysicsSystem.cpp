@@ -318,9 +318,6 @@ void PhysicsSystem::NarrowPhase() {
 		CollisionDetection::CollisionInfo info = *i;
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info)) {
 			info.framesLeft = numCollisionFrames;
-			// either pair are default collisions just handle normally - could just put this in else { }
-			CollisionType a = info.a->GetPhysicsObject()->GetCollisionType();
-			CollisionType b = info.b->GetPhysicsObject()->GetCollisionType();
 			
 			ImpulseResolveCollision(*info.a, *info.b, info.point);
 			switch (info.a->GetPhysicsObject()->GetCollisionType()) {
@@ -353,10 +350,6 @@ void PhysicsSystem::NarrowPhase() {
 				}
 				break;
 			}
-			/*if (info.a->GetPhysicsObject()->GetCollisionType() == CollisionType::DEFAULT ||
-				info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::DEFAULT) {
-				ImpulseResolveCollision(*info.a, *info.b, info.point);
-			}*/
 			// insert into main set
 			allCollisions.insert(info);
 		}

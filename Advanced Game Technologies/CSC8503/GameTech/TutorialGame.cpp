@@ -368,21 +368,6 @@ void TutorialGame::MoveSelectedObject() {
 			if (closestCollision.node == selectionObject)
 				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
 	}
-	if (inSelectionMode) {
-		/*float scale = 200.0f;
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W))
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * scale);
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A))
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * scale);
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S))
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * scale);
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D))
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * scale);
-		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::SPACE))
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 1, 0) * scale * 20);
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SHIFT))
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -1, 0) * scale * 0.4);*/
-	}
 }
 
 void TutorialGame::InitMisc() {
