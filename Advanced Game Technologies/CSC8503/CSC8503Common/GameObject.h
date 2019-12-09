@@ -40,7 +40,7 @@ namespace NCL {
 			bool IsCollectable() const { return isCollectable; }
 
 			void SetCollected(bool collected) { this->collected = collected; }
-			bool Collected() const { return collected; }
+			bool IsCollected() const { return collected; }
 
 			const Transform& GetConstTransform() const {
 				return transform;
@@ -98,8 +98,10 @@ namespace NCL {
 			NetworkObject*		networkObject;
 
 			bool	isActive;
+
 			bool	isCollectable;
 			bool	collected;
+
 			string	name;
 
 			Vector3 broadphaseAABB;

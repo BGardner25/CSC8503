@@ -62,6 +62,8 @@ namespace NCL {
 			void UpdateQuadTree();
 
 			std::vector<GameObject*> gameObjects;
+
+			// @TODO dont think this is needed anymore, collectedObjects in tutorialgame instead, where else is this used?
 			std::vector<GameObject*> collectableObjects;
 
 			std::vector<Constraint*> constraints;

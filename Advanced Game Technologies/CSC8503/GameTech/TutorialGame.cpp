@@ -84,7 +84,7 @@ void TutorialGame::UpdateGame(float dt) {
 	if (lockedObject != nullptr) {
 		LockedCameraMovement();
 	}
-	// TEMPORARY
+	// @TODO TEMPORARY
 	appleCount = physics->physAppleCount;
 	UpdateKeys();
 
@@ -110,6 +110,16 @@ void TutorialGame::UpdateGame(float dt) {
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 	physics->Update(dt);
+
+	// apple removed from collectableObjects... increase score, if apple added, decrease score
+	for (GameObject* i : apple) {
+		if (i->IsCollected()) {
+			appleCount++;
+			collectedObjects.emplace_back(i);
+			i->SetCollected(false);
+		}
+	}
+
 
 	Debug::FlushRenderables();
 	renderer->Render();
@@ -369,6 +379,7 @@ void TutorialGame::MoveSelectedObject() {
 }
 
 void TutorialGame::InitMisc() {
+	// lock camera to goose and allow goose movement
 	selectionObject = goose;
 	lockedObject = goose;
 

@@ -106,6 +106,8 @@ namespace NCL {
 			int bonusCollected = 0;
 
 			Vector4 originalColour = Vector4(1, 1, 1, 1);
+
+			std::vector<GameObject*> collectedObjects;
 		};
 	}
 }
