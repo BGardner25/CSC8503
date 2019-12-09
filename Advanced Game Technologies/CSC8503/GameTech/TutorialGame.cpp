@@ -392,6 +392,12 @@ void TutorialGame::InitCamera() {
 void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
+	
+	// reset scoring
+	int appleCount = 0;
+	int applesCollected = 0;
+	int bonusCount = 0;
+	int bonusCollected = 0;
 
 	/****************LEVEL FOUNDATION*****************/
 	home = AddFloorToWorld(Vector3(0, 2, -40), Vector3(10, 0.5, 10));
