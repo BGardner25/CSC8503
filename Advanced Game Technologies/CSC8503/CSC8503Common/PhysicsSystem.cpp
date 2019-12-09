@@ -17,8 +17,8 @@ PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
 	useBroadPhase	= true;	
 	dTOffset		= 0.0f;
 	globalDamping	= 0.95f;
-	// gravity * 4 to reduce 'floaty' feeling... gameplay over realism
-	SetGravity(Vector3(0.0f, -9.8f * 4.0f, 0.0f));
+	// gravity * 5 to reduce 'floaty' feeling... gameplay over realism
+	SetGravity(Vector3(0.0f, -9.8f * 5.0f, 0.0f));
 }
 
 PhysicsSystem::~PhysicsSystem()	{
@@ -179,6 +179,8 @@ void PhysicsSystem::BasicCollisionDetection() {
 				if (((*i)->GetName() == "Goose" && (*j)->GetName() == "Apple") ||
 					((*i)->GetName() == "Apple" && (*j)->GetName() == "Goose")) {
 					physAppleCount++;
+					(*i)->GetPhysicsObject()->AddForce(Vector3(0, 10000, 0));
+					(*j)->GetPhysicsObject()->AddForce(Vector3(0, 10000, 0));
 				}
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
@@ -250,6 +252,25 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, fullImpulse));
 }
 
+void PhysicsSystem::CollectableCollision(GameObject& collectableObject) {
+	gameWorld.RemoveGameObject(&collectableObject);
+	collectableObject.SetBoundingVolume(nullptr);
+}
+
+void PhysicsSystem::TrampolineCollision(GameObject& playerObject, GameObject& trampoline, CollisionDetection::ContactPoint& p) {
+	std::cout << "TRAMPOLINE COLLISION CALLED\n";
+	// @TODO why doesnt this do anything...
+	playerObject.GetPhysicsObject()->AddForce(Vector3(0.0f, 30000.0f, 0.0f));
+	// this works so something to do with adding force etc
+	//playerObject.GetTransform().SetLocalScale(Vector3(2.0, 2.0, 2.0));
+}
+
+void PhysicsSystem::LakeCollision(GameObject& playerObject){
+	std::cout << "LAKE COLLISION CALLED\n";
+	// @TODO this doesnt work either
+	playerObject.GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
+}
+
 /*
 
 Later, we replace the BasicCollisionDetection method with a broadphase
@@ -297,7 +318,45 @@ void PhysicsSystem::NarrowPhase() {
 		CollisionDetection::CollisionInfo info = *i;
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info)) {
 			info.framesLeft = numCollisionFrames;
+			// either pair are default collisions just handle normally - could just put this in else { }
+			CollisionType a = info.a->GetPhysicsObject()->GetCollisionType();
+			CollisionType b = info.b->GetPhysicsObject()->GetCollisionType();
+			
 			ImpulseResolveCollision(*info.a, *info.b, info.point);
+			switch (info.a->GetPhysicsObject()->GetCollisionType()) {
+			case CollisionType::PLAYER:
+				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
+				case CollisionType::LAKE:
+					LakeCollision(*info.a); break;
+				case CollisionType::COLLECTABLE:
+					CollectableCollision(*info.b); break;
+				case CollisionType::TRAMPOLINE:
+					TrampolineCollision(*info.a, *info.b, info.point); break;
+				}
+				break;
+			case CollisionType::LAKE:
+				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
+				case CollisionType::PLAYER:
+					LakeCollision(*info.b); break;
+				}
+				break;
+			case CollisionType::COLLECTABLE:
+				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
+				case CollisionType::PLAYER:
+					CollectableCollision(*info.a); break;
+				}
+				break;
+			case CollisionType::TRAMPOLINE:
+				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
+				case CollisionType::PLAYER:
+					TrampolineCollision(*info.b, *info.a, info.point); break;
+				}
+				break;
+			}
+			/*if (info.a->GetPhysicsObject()->GetCollisionType() == CollisionType::DEFAULT ||
+				info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::DEFAULT) {
+				ImpulseResolveCollision(*info.a, *info.b, info.point);
+			}*/
 			// insert into main set
 			allCollisions.insert(info);
 		}

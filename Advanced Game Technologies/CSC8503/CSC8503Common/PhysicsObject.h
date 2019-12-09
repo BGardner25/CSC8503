@@ -10,6 +10,10 @@ namespace NCL {
 	namespace CSC8503 {
 		class Transform;
 
+		enum class CollisionType {
+			DEFAULT, PLAYER, LAKE, COLLECTABLE, TRAMPOLINE
+		};
+
 		class PhysicsObject	{
 		public:
 			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
@@ -72,6 +76,9 @@ namespace NCL {
 			void SetElasticity(float elasticity) { this->elasticity = elasticity; }
 			float GetElasticity() const { return elasticity; }
 
+			void SetCollisionType(const CollisionType collisionType) { this->collisionType = collisionType; }
+			CollisionType GetCollisionType() const { return collisionType; }
+
 		protected:
 			const CollisionVolume* volume;
 			Transform*		transform;
@@ -90,6 +97,8 @@ namespace NCL {
 			Vector3 torque;
 			Vector3 inverseInertia;
 			Matrix3 inverseInteriaTensor;
+
+			CollisionType collisionType;
 		};
 	}
 }

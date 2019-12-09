@@ -41,7 +41,7 @@ void TutorialGame::InitialiseAssets() {
 
 	loadFunc("cube.msh"		 , &cubeMesh);
 	loadFunc("sphere.msh"	 , &sphereMesh);
-	loadFunc("goose.msh"	 , &gooseMesh);
+	loadFunc("CenteredGoose.msh", &gooseMesh);
 	loadFunc("CharacterA.msh", &keeperMesh);
 	loadFunc("CharacterM.msh", &charA);
 	loadFunc("CharacterF.msh", &charB);
@@ -110,6 +110,8 @@ void TutorialGame::UpdateGame(float dt) {
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 	physics->Update(dt);
+
+	
 
 	Debug::FlushRenderables();
 	renderer->Render();
@@ -248,14 +250,15 @@ void TutorialGame::DebugObjectMovement() {
 void TutorialGame::PlayerMovement() {
 	if (inSelectionMode) {
 		float scale = 200.0f;
+		Quaternion orientation;
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
-			Quaternion orientation = Quaternion(Vector3(0, 1, 0), 0.0f);
+			orientation = Quaternion(Vector3(0, 1, 0), 0.0f);
 			orientation.Normalise();
 			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * scale);
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
-			Quaternion orientation = Quaternion(Vector3(0, 1, 0), -1.0f);
+			orientation = Quaternion(Vector3(0, 1, 0), -1.0f);
 			orientation.Normalise();
 			goose->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * scale);
 			goose->GetTransform().SetLocalOrientation(orientation);
@@ -263,13 +266,13 @@ void TutorialGame::PlayerMovement() {
 			//std::cout << goose->GetTransform().GetWorldOrientation() << std::endl;
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
-			Quaternion orientation = Quaternion(Vector3(0, 1, 0), 180.0f);
+			orientation = Quaternion(Vector3(0, 1, 0), 180.0f);
 			orientation.Normalise();
 			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * scale);
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
-			Quaternion orientation = Quaternion(Vector3(0, 1, 0), 1.0f);
+			orientation = Quaternion(Vector3(0, 1, 0), 1.0f);
 			orientation.Normalise();
 			goose->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * scale);
 			goose->GetTransform().SetLocalOrientation(orientation);
@@ -456,7 +459,7 @@ void TutorialGame::InitWorld() {
 	/*************************************************/
 
 	/******************GATE AREA**********************/
-	gate = AddGateToWorld(Vector3(90, 4, -150), Vector3(0.5, 2, 4), "Gate");
+	gate = AddGateToWorld(Vector3(50, 4, -150), Vector3(0.5, 2, 4));
 	AddWallToWorld(Vector3(50, 5, -118), Vector3(1, 3, 28));
 	AddWallToWorld(Vector3(50, 5, -169), Vector3(1, 3, 15));
 	AddWallToWorld(Vector3(124.5, 5, -185), Vector3(75.5, 3, 1));
@@ -600,6 +603,7 @@ GameObject* TutorialGame::AddTrampolineToWorld(const Vector3& position, Vector3 
 
 	trampoline->GetPhysicsObject()->SetInverseMass(0);
 	trampoline->GetPhysicsObject()->InitCubeInertia();
+	trampoline->GetPhysicsObject()->SetCollisionType(CollisionType::TRAMPOLINE);
 
 	world->AddGameObject(trampoline);
 
@@ -619,6 +623,7 @@ GameObject* TutorialGame::AddLakeToWorld(const Vector3& position, Vector3 dimens
 
 	lake->GetPhysicsObject()->SetInverseMass(0);
 	lake->GetPhysicsObject()->InitCubeInertia();
+	lake->GetPhysicsObject()->SetCollisionType(CollisionType::LAKE);
 
 	world->AddGameObject(lake);
 
@@ -651,9 +656,9 @@ GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimens
 	gate->SetBoundingVolume((CollisionVolume*)volume);
 	gate->GetTransform().SetWorldScale(dimensions);
 	gate->GetTransform().SetWorldPosition(position);
-	Quaternion orientation = Quaternion(Vector3(0, 0.8, 0), 0.34f);
+	/*Quaternion orientation = Quaternion(Vector3(0, 0.8, 0), 0.34f);
 	orientation.Normalise();
-	gate->GetTransform().SetLocalOrientation(orientation);
+	gate->GetTransform().SetLocalOrientation(orientation);*/
 
 	gate->SetRenderObject(new RenderObject(&gate->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.6f, 0.2f, 1.0f)));
 	gate->SetPhysicsObject(new PhysicsObject(&gate->GetTransform(), gate->GetBoundingVolume()));
@@ -711,11 +716,13 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	cube->GetTransform().SetWorldPosition(position);
 	cube->GetTransform().SetWorldScale(dimensions);
 
-	if(collectable)
+	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+	if (collectable) {
 		cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(0.0f, 0.5f, 0.5f, 1.0f)));
+		cube->GetPhysicsObject()->SetCollisionType(CollisionType::COLLECTABLE);
+	}
 	else
 		cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
-	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 
 	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
 	cube->GetPhysicsObject()->InitCubeInertia();
@@ -744,6 +751,7 @@ GameObject* TutorialGame::AddGooseToWorld(const Vector3& position)
 
 	goose->GetPhysicsObject()->SetInverseMass(inverseMass);
 	goose->GetPhysicsObject()->InitSphereInertia();
+	goose->GetPhysicsObject()->SetCollisionType(CollisionType::PLAYER);
 
 	world->AddGameObject(goose);
 
@@ -823,6 +831,7 @@ GameObject* TutorialGame::AddAppleToWorld(const Vector3& position) {
 
 	apple->GetPhysicsObject()->SetInverseMass(1.0f);
 	apple->GetPhysicsObject()->InitSphereInertia();
+	apple->GetPhysicsObject()->SetCollisionType(CollisionType::COLLECTABLE);
 
 	world->AddGameObject(apple);
 

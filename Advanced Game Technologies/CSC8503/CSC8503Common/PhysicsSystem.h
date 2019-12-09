@@ -44,6 +44,10 @@ namespace NCL {
 			void UpdateObjectAABBs();
 
 			void ImpulseResolveCollision(GameObject& a , GameObject&b, CollisionDetection::ContactPoint& p) const;
+			void CollectableCollision(GameObject& collectableObject);
+			void TrampolineCollision(GameObject& playerObject, GameObject& trampoline, CollisionDetection::ContactPoint& p);
+			void LakeCollision(GameObject& playerObject);
+			// moving cube collision
 
 			GameWorld& gameWorld;
 
