@@ -111,8 +111,6 @@ void TutorialGame::UpdateGame(float dt) {
 	renderer->Update(dt);
 	physics->Update(dt);
 
-	
-
 	Debug::FlushRenderables();
 	renderer->Render();
 }
@@ -509,6 +507,8 @@ void TutorialGame::InitWorld() {
 	AddPlatformToWorld(Vector3(50, 12, -465), Vector3(5, 0.25, 5));
 	/*************************************************/
 
+	world->InitCollectableObjects();
+
 
 	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
 	AddGooseToWorld(Vector3(30, 2, 0));
@@ -816,6 +816,7 @@ GameObject* TutorialGame::AddAppleToWorld(const Vector3& position) {
 	apple->SetBoundingVolume((CollisionVolume*)volume);
 	apple->GetTransform().SetWorldScale(Vector3(4, 4, 4));
 	apple->GetTransform().SetWorldPosition(position);
+	apple->SetCollectable(true);
 
 	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), appleMesh, nullptr, basicShader, Vector4(1.0f, 0.0f, 0.0f, 1.0f)));
 	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));

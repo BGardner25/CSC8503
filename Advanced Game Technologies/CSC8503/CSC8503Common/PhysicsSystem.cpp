@@ -254,6 +254,7 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 
 void PhysicsSystem::CollectableCollision(GameObject& collectableObject) {
 	gameWorld.RemoveGameObject(&collectableObject);
+	gameWorld.RemoveCollectableObject(&collectableObject);
 	collectableObject.SetBoundingVolume(nullptr);
 }
 
@@ -320,6 +321,7 @@ void PhysicsSystem::NarrowPhase() {
 			info.framesLeft = numCollisionFrames;
 			
 			ImpulseResolveCollision(*info.a, *info.b, info.point);
+			// @TODO find a better way of doing this then nested switches... bit of a mess
 			switch (info.a->GetPhysicsObject()->GetCollisionType()) {
 			case CollisionType::PLAYER:
 				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
