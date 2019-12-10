@@ -24,10 +24,6 @@ namespace NCL {
 			void AddGameObject(GameObject* o);
 			void RemoveGameObject(GameObject* o);
 
-			void InitCollectableObjects();
-			void RemoveCollectableObject(GameObject* o);
-			std::vector<GameObject*> GetCollectableObjects() { return collectableObjects; }
-
 			void AddConstraint(Constraint* c);
 			void RemoveConstraint(Constraint* c);
 
@@ -62,9 +58,6 @@ namespace NCL {
 			void UpdateQuadTree();
 
 			std::vector<GameObject*> gameObjects;
-
-			// @TODO dont think this is needed anymore, collectedObjects in tutorialgame instead, where else is this used?
-			std::vector<GameObject*> collectableObjects;
 
 			std::vector<Constraint*> constraints;
 

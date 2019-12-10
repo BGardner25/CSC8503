@@ -36,7 +36,7 @@ namespace NCL {
 				return isActive;
 			}
 
-			void SetCollectable(bool isCollectable) { this->IsCollectable = IsCollectable; }
+			void SetCollectable(bool isCollectable) { this->isCollectable = isCollectable; }
 			bool IsCollectable() const { return isCollectable; }
 
 			void SetCollected(bool collected) { this->collected = collected; }
@@ -86,6 +86,9 @@ namespace NCL {
 
 			void UpdateBroadphaseAABB();
 
+			void SetCollidedWith(CollisionType collisionType) { this->collisionType = collisionType; }
+			CollisionType HasCollidedWith() { return collisionType; }
+
 			/*void SetLayer(Layer layer) { this->layer = layer; }
 			Layer GetLayer() const { return layer; }*/
 
@@ -98,14 +101,13 @@ namespace NCL {
 			NetworkObject*		networkObject;
 
 			bool	isActive;
-
-			bool	isCollectable;
-			bool	collected;
-
+			bool isCollectable;
+			bool collected;
 			string	name;
 
 			Vector3 broadphaseAABB;
 
+			CollisionType collisionType;
 			//Layer layer;
 		};
 	}

@@ -36,10 +36,13 @@ namespace NCL {
 			void DebugObjectMovement();
 			void LockedObjectMovement();
 			void LockedCameraMovement();
-			void PlayerMovement();
+			void PlayerMovement(float forceScale = 1.0f);
 			void InitMisc();
+			void ResetCollectables();
+			void ResetGame();
 
-			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Floor");
+			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), 
+											string name = "Floor", CollisionType collisionType = CollisionType::FLOOR);
 			GameObject* AddWallToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Wall");
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f, bool hollow = false);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, bool collectable = false);
@@ -89,7 +92,6 @@ namespace NCL {
 			GameObject* goose = nullptr;
 			GameObject* sentry = nullptr;
 			GameObject* lake = nullptr;
-			GameObject* land = nullptr;
 			GameObject* gate = nullptr;
 			GameObject* apple[5];
 			GameObject* bonusItem[6];
@@ -101,13 +103,18 @@ namespace NCL {
 			const Vector3 SENTRY_SPAWN = Vector3(-180, 3, -470);
 
 			int appleCount = 0;
-			int applesCollected = 0;
+			int applesBanked = 0;
 			int bonusCount = 0;
-			int bonusCollected = 0;
+			int bonusBanked = 0;
+			int totalScore = 0;
 
 			Vector4 originalColour = Vector4(1, 1, 1, 1);
 
 			std::vector<GameObject*> collectedObjects;
+
+			int timeLeft = 180;
+			float timePassed = 0;
+			bool canJump = true;
 		};
 	}
 }

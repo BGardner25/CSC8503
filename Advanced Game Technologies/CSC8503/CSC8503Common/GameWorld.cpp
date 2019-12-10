@@ -43,7 +43,7 @@ void GameWorld::RemoveGameObject(GameObject* o) {
 	std::remove(gameObjects.begin(), gameObjects.end(), o);
 }
 
-void GameWorld::InitCollectableObjects() {
+/*void GameWorld::InitCollectableObjects() {
 	for (GameObject* i : gameObjects)
 		if ((*i).IsCollectable())
 			collectableObjects.emplace_back(i);
@@ -51,7 +51,7 @@ void GameWorld::InitCollectableObjects() {
 
 void GameWorld::RemoveCollectableObject(GameObject* o) {
 	std::remove(collectableObjects.begin(), collectableObjects.end(), o);
-}
+}*/
 
 void GameWorld::GetObjectIterators(
 	GameObjectIterator& first,

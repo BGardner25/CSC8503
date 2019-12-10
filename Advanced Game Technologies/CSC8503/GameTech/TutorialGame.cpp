@@ -69,7 +69,6 @@ TutorialGame::~TutorialGame()	{
 	delete home;
 	delete goose;
 	delete lake;
-	delete land;
 	delete gate;
 	delete[] apple;
 	delete[] bonusItem;
@@ -84,11 +83,10 @@ void TutorialGame::UpdateGame(float dt) {
 	if (lockedObject != nullptr) {
 		LockedCameraMovement();
 	}
-	// @TODO TEMPORARY
-	appleCount = physics->physAppleCount;
+	
 	UpdateKeys();
 
-	if (useGravity) {
+	/*if (useGravity) {
 		Debug::Print("(G)ravity on", Vector2(10, 40));
 	}
 	else {
@@ -99,17 +97,31 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 	else {
 		Debug::Print("Broadphase off", Vector2(20, 60));
-	}
+	}*/
 
-	renderer->DrawString("Apples:" + std::to_string(appleCount), Vector2(10, 0));
+	renderer->DrawString("Apples:" + std::to_string(appleCount), Vector2(10, 42));
+	renderer->DrawString("Bonus Items:" + std::to_string(bonusCount), Vector2(10, 21));
+	renderer->DrawString("Total Score:" + std::to_string(totalScore), Vector2(10, 0));
+	renderer->DrawString("Time Left:" + std::to_string(timeLeft), Vector2(0, 63));
 
 	SelectObject();
-	MoveSelectedObject();
-	PlayerMovement();
+	//MoveSelectedObject();
+
+	goose->HasCollidedWith() == CollisionType::LAKE ? PlayerMovement(0.35f) : PlayerMovement();
 
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 	physics->Update(dt);
+
+	timePassed += dt;
+	if (timePassed >= 1.0f && timeLeft > 0) {
+		timeLeft--;
+		timePassed = 0;
+	}
+	if (timeLeft <= 0) {
+		// menu to ask if quit or play again
+		ResetGame();
+	}
 
 	// apple removed from collectableObjects... increase score, if apple added, decrease score
 	for (GameObject* i : apple) {
@@ -119,16 +131,38 @@ void TutorialGame::UpdateGame(float dt) {
 			i->SetCollected(false);
 		}
 	}
-
+	for (GameObject* i : bonusItem) {
+		if (i->IsCollected()) {
+			bonusCount++;
+			collectedObjects.emplace_back(i);
+			i->SetCollected(false);
+		}
+	}
+	if (goose->HasCollidedWith() == CollisionType::HOME && (appleCount > 0 || bonusCount > 0)) {
+		totalScore += appleCount;
+		totalScore += bonusCount * 5;
+		appleCount = bonusCount = 0;
+		collectedObjects.clear();
+	}
+	if (goose->HasCollidedWith() == CollisionType::TRAMPOLINE) {
+		goose->SetCollidedWith(CollisionType::DEFAULT);
+		goose->GetPhysicsObject()->AddForce(Vector3(0.0f, 20000.0f, 0.0f));
+	}
 
 	Debug::FlushRenderables();
 	renderer->Render();
 }
 
+// @TODO doesnt work if any object has been collected
+void TutorialGame::ResetGame() {
+	InitWorld(); //We can reset the simulation at any time with F1
+	InitMisc();
+	selectionObject = nullptr;
+}
+
 void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F1)) {
-		InitWorld(); //We can reset the simulation at any time with F1
-		selectionObject = nullptr;
+		ResetGame();
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F2)) {
@@ -142,6 +176,9 @@ void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::B)) {
 		useBroadPhase = !useBroadPhase;
 		physics->UseBroadPhase(useBroadPhase);
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::R)) {
+		ResetCollectables();
 	}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
@@ -181,20 +218,22 @@ void TutorialGame::LockedObjectMovement() {
 
 	Vector3 fwdAxis = Vector3::Cross(Vector3(0, 1, 0), rightAxis);
 
+	float scale = 100.0f;
+
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
-		selectionObject->GetPhysicsObject()->AddForce(-rightAxis);
+		selectionObject->GetPhysicsObject()->AddForce(-rightAxis * scale);
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
-		selectionObject->GetPhysicsObject()->AddForce(rightAxis);
+		selectionObject->GetPhysicsObject()->AddForce(rightAxis * scale);
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) {
-		selectionObject->GetPhysicsObject()->AddForce(fwdAxis);
+		selectionObject->GetPhysicsObject()->AddForce(fwdAxis * scale);
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) {
-		selectionObject->GetPhysicsObject()->AddForce(-fwdAxis);
+		selectionObject->GetPhysicsObject()->AddForce(-fwdAxis * scale);
 	}
 }
 
@@ -255,20 +294,19 @@ void TutorialGame::DebugObjectMovement() {
 	}
 }
 
-void TutorialGame::PlayerMovement() {
+void TutorialGame::PlayerMovement(float forceScale) {
 	if (inSelectionMode) {
-		float scale = 200.0f;
 		Quaternion orientation;
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 0.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * scale);
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, -200.0f) * forceScale);
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
 			orientation = Quaternion(Vector3(0, 1, 0), -1.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * scale);
+			goose->GetPhysicsObject()->AddForce(Vector3(-200.0f, 0, 0) * forceScale);
 			goose->GetTransform().SetLocalOrientation(orientation);
 			//goose->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
 			//std::cout << goose->GetTransform().GetWorldOrientation() << std::endl;
@@ -276,19 +314,27 @@ void TutorialGame::PlayerMovement() {
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 180.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * scale);
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, 200.0f) * forceScale);
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 1.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * scale);
+			goose->GetPhysicsObject()->AddForce(Vector3(200.0f, 0, 0) * forceScale);
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
-		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::SPACE))
-			goose->GetPhysicsObject()->AddForce(Vector3(0, 1, 0) * scale * 20);
-		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::SHIFT))
-			goose->GetPhysicsObject()->AddForce(Vector3(0, -1, 0) * scale * 0.4);
+
+		// can only jump if on the floor
+		if ((goose->HasCollidedWith() == CollisionType::FLOOR || goose->HasCollidedWith() == CollisionType::HOME ||
+			goose->HasCollidedWith() == CollisionType::LAKE))
+			canJump = true;
+		else
+			canJump = false;
+		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::SPACE) && canJump == true) {
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 200.0f, 0) * 20);
+			canJump = false;
+			goose->SetCollidedWith(CollisionType::NONE);
+		}
 	}
 }
 
@@ -398,25 +444,34 @@ void TutorialGame::InitCamera() {
 	lockedObject = nullptr;
 }
 
+void TutorialGame::ResetCollectables() {
+	for (GameObject* o : collectedObjects) {
+		// @TODO need bounding volume
+		world->AddGameObject(o);
+	}
+}
+
 void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
 	
 	// reset scoring
-	int appleCount = 0;
-	int applesCollected = 0;
-	int bonusCount = 0;
-	int bonusCollected = 0;
+	appleCount = 0;
+	applesBanked = 0;
+	bonusCount = 0;
+	bonusBanked = 0;
+	totalScore = 0;
+	timeLeft = 180;
 
 	/****************LEVEL FOUNDATION*****************/
-	home = AddFloorToWorld(Vector3(0, 2, -40), Vector3(10, 0.5, 10));
+	home = AddFloorToWorld(Vector3(0, 2, -40), Vector3(10, 0.5, 10), "Home", CollisionType::HOME);
 	lake = AddLakeToWorld(Vector3(0, 0, -40), Vector3(40, 1, 50));
 
 	AddWallToWorld(Vector3(0, 4, 12), Vector3(40, 6, 2));
 	AddWallToWorld(Vector3(-41, 4, -40), Vector3(1, 6, 50));
 	AddWallToWorld(Vector3(41, 4, -40), Vector3(1, 6, 50));
 
-	land = AddFloorToWorld(Vector3(0, 0, -290), Vector3(200, 2, 200));
+	AddFloorToWorld(Vector3(0, 0, -290), Vector3(200, 2, 200));
 	// left wall
 	AddWallToWorld(Vector3(-202, 8, -290), Vector3(2, 10, 200));
 	// right wall
@@ -518,8 +573,6 @@ void TutorialGame::InitWorld() {
 	AddPlatformToWorld(Vector3(50, 12, -465), Vector3(5, 0.25, 5));
 	/*************************************************/
 
-	world->InitCollectableObjects();
-
 
 	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
 	AddGooseToWorld(Vector3(30, 2, 0));
@@ -554,7 +607,7 @@ void TutorialGame::InitWorld() {
 A single function to add a large immoveable cube to the bottom of our world
 
 */
-GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimensions, string name) {
+GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimensions, string name, CollisionType collisionType) {
 	GameObject* floor = new GameObject(name);
 
 	AABBVolume* volume = new AABBVolume(dimensions);
@@ -567,6 +620,7 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimen
 
 	floor->GetPhysicsObject()->SetInverseMass(0);
 	floor->GetPhysicsObject()->InitCubeInertia();
+	floor->GetPhysicsObject()->SetCollisionType(collisionType);
 
 	world->AddGameObject(floor);
 
@@ -586,6 +640,7 @@ GameObject* TutorialGame::AddPlatformToWorld(const Vector3& position, Vector3 di
 
 	platform->GetPhysicsObject()->SetInverseMass(0);
 	platform->GetPhysicsObject()->InitCubeInertia();
+	platform->GetPhysicsObject()->SetCollisionType(CollisionType::FLOOR);
 
 	world->AddGameObject(platform);
 

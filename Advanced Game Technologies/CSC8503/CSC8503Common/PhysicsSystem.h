@@ -26,8 +26,7 @@ namespace NCL {
 			}
 
 			void SetGravity(const Vector3& g);
-			// @TODO TEMPORARY
-			int physAppleCount = 0;
+			
 		protected:
 			void BasicCollisionDetection();
 			void BroadPhase();
@@ -45,8 +44,6 @@ namespace NCL {
 
 			void ImpulseResolveCollision(GameObject& a , GameObject&b, CollisionDetection::ContactPoint& p) const;
 			void CollectableCollision(GameObject& collectableObject);
-			void TrampolineCollision(GameObject& playerObject, GameObject& trampoline, CollisionDetection::ContactPoint& p);
-			void LakeCollision(GameObject& playerObject);
 			// moving cube collision
 
 			GameWorld& gameWorld;

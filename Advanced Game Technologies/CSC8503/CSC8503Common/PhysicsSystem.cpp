@@ -40,6 +40,7 @@ any collisions they are in.
 */
 void PhysicsSystem::Clear() {
 	allCollisions.clear();
+	broadphaseCollisions.clear();
 }
 
 /*
@@ -175,15 +176,8 @@ void PhysicsSystem::BasicCollisionDetection() {
 			CollisionDetection::CollisionInfo info;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info)) {
 				std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
-				// @TODO TEMPORARY
-				if (((*i)->GetName() == "Goose" && (*j)->GetName() == "Apple") ||
-					((*i)->GetName() == "Apple" && (*j)->GetName() == "Goose")) {
-					physAppleCount++;
-					(*i)->GetPhysicsObject()->AddForce(Vector3(0, 10000, 0));
-					(*j)->GetPhysicsObject()->AddForce(Vector3(0, 10000, 0));
-				}
-				ImpulseResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
+				ImpulseResolveCollision(*info.a, *info.b, info.point);
 				allCollisions.insert(info);
 			}
 		}
@@ -254,23 +248,8 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 
 void PhysicsSystem::CollectableCollision(GameObject& collectableObject) {
 	gameWorld.RemoveGameObject(&collectableObject);
-	gameWorld.RemoveCollectableObject(&collectableObject);
 	collectableObject.SetBoundingVolume(nullptr);
 	collectableObject.SetCollected(true);
-}
-
-void PhysicsSystem::TrampolineCollision(GameObject& playerObject, GameObject& trampoline, CollisionDetection::ContactPoint& p) {
-	std::cout << "TRAMPOLINE COLLISION CALLED\n";
-	// @TODO why doesnt this do anything...
-	playerObject.GetPhysicsObject()->AddForce(Vector3(0.0f, 30000.0f, 0.0f));
-	// this works so something to do with adding force etc
-	//playerObject.GetTransform().SetLocalScale(Vector3(2.0, 2.0, 2.0));
-}
-
-void PhysicsSystem::LakeCollision(GameObject& playerObject){
-	std::cout << "LAKE COLLISION CALLED\n";
-	// @TODO this doesnt work either
-	playerObject.GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
 }
 
 /*
@@ -323,36 +302,44 @@ void PhysicsSystem::NarrowPhase() {
 			
 			ImpulseResolveCollision(*info.a, *info.b, info.point);
 			// @TODO find a better way of doing this then nested switches... bit of a mess
-			// also need collision with AI
+			// also need collision with AI and moving boxes
 			switch (info.a->GetPhysicsObject()->GetCollisionType()) {
 			case CollisionType::PLAYER:
 				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
 				case CollisionType::LAKE:
-					LakeCollision(*info.a); break;
+					info.a->SetCollidedWith(CollisionType::LAKE); break;
 				case CollisionType::COLLECTABLE:
 					CollectableCollision(*info.b); break;
 				case CollisionType::TRAMPOLINE:
-					TrampolineCollision(*info.a, *info.b, info.point); break;
+					info.a->SetCollidedWith(CollisionType::TRAMPOLINE); break;
+				case CollisionType::HOME:
+					info.a->SetCollidedWith(CollisionType::HOME); break;
+				case CollisionType::FLOOR:
+					info.a->SetCollidedWith(CollisionType::FLOOR); break;
 				}
 				break;
 			case CollisionType::LAKE:
-				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
-				case CollisionType::PLAYER:
-					LakeCollision(*info.b); break;
-				}
+				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::PLAYER)
+					info.b->SetCollidedWith(CollisionType::LAKE); 
 				break;
 			case CollisionType::COLLECTABLE:
-				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
-				case CollisionType::PLAYER:
-					CollectableCollision(*info.a); break;
-				}
+				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::PLAYER)
+					CollectableCollision(*info.a);
 				break;
 			case CollisionType::TRAMPOLINE:
-				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
-				case CollisionType::PLAYER:
-					TrampolineCollision(*info.b, *info.a, info.point); break;
-				}
+				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::PLAYER)
+					info.b->SetCollidedWith(CollisionType::TRAMPOLINE); 
 				break;
+			case CollisionType::HOME:
+				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::PLAYER)
+					info.b->SetCollidedWith(CollisionType::HOME); 
+				break;
+			case CollisionType::FLOOR:
+				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::PLAYER)
+					info.b->SetCollidedWith(CollisionType::FLOOR);
+				break;
+			default:
+				info.a->SetCollidedWith(CollisionType::DEFAULT); info.b->SetCollidedWith(CollisionType::DEFAULT);
 			}
 			// insert into main set
 			allCollisions.insert(info);
