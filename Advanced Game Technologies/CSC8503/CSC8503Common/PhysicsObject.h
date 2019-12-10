@@ -13,12 +13,13 @@ namespace NCL {
 		enum class CollisionType {
 			DEFAULT,
 			PLAYER,
+			FLOOR,
+			WALL,
+			HOME,
 			LAKE,
 			COLLECTABLE,
-			TRAMPOLINE,
-			HOME,
 			IMMOVABLE,
-			FLOOR,
+			TRAMPOLINE,
 			NONE
 		};
 

@@ -107,7 +107,8 @@ void TutorialGame::UpdateGame(float dt) {
 	SelectObject();
 	//MoveSelectedObject();
 
-	goose->HasCollidedWith() == CollisionType::LAKE ? PlayerMovement(0.35f) : PlayerMovement();
+	goose->HasCollidedWith() == CollisionType::LAKE ? goose->GetPhysicsObject()->SetInverseMass(0.35f) : goose->GetPhysicsObject()->SetInverseMass(1.0f);
+	PlayerMovement();
 
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
@@ -119,11 +120,11 @@ void TutorialGame::UpdateGame(float dt) {
 		timePassed = 0;
 	}
 	if (timeLeft <= 0) {
-		// menu to ask if quit or play again
+		// @TODO menu to ask if quit or play again
 		ResetGame();
 	}
 
-	// apple removed from collectableObjects... increase score, if apple added, decrease score
+	// @TODO if apple added, decrease score
 	for (GameObject* i : apple) {
 		if (i->IsCollected()) {
 			appleCount++;
@@ -149,8 +150,26 @@ void TutorialGame::UpdateGame(float dt) {
 		goose->GetPhysicsObject()->AddForce(Vector3(0.0f, 20000.0f, 0.0f));
 	}
 
+	UpdateMovingBlocks();
+
 	Debug::FlushRenderables();
 	renderer->Render();
+}
+
+void TutorialGame::UpdateMovingBlocks() {
+	if (dynamicCube[0]->HasCollidedWith() == CollisionType::WALL) {
+		cubeDirection[0] *= -1.0f;
+		dynamicCube[0]->SetCollidedWith(CollisionType::DEFAULT);
+	}
+	dynamicCube[0]->GetPhysicsObject()->AddForce(Vector3(-100000.0f * cubeDirection[0], 0.0f, 0.0f));
+
+	for (int i = 1; i < 3; ++i) {
+		if (dynamicCube[i]->HasCollidedWith() == CollisionType::WALL) {
+			cubeDirection[i] *= -1.0f;
+			dynamicCube[i]->SetCollidedWith(CollisionType::DEFAULT);
+		}
+		dynamicCube[i]->GetPhysicsObject()->AddForce(Vector3(0.0f, 0.0f, 100000.0f * cubeDirection[i]));
+	}
 }
 
 // @TODO doesnt work if any object has been collected
@@ -173,10 +192,10 @@ void TutorialGame::UpdateKeys() {
 		useGravity = !useGravity; //Toggle gravity!
 		physics->UseGravity(useGravity);
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::B)) {
+	/*if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::B)) {
 		useBroadPhase = !useBroadPhase;
 		physics->UseBroadPhase(useBroadPhase);
-	}
+	}*/
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::R)) {
 		ResetCollectables();
 	}
@@ -294,19 +313,19 @@ void TutorialGame::DebugObjectMovement() {
 	}
 }
 
-void TutorialGame::PlayerMovement(float forceScale) {
+void TutorialGame::PlayerMovement() {
 	if (inSelectionMode) {
 		Quaternion orientation;
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 0.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, -200.0f) * forceScale);
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, -200.0f));
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
 			orientation = Quaternion(Vector3(0, 1, 0), -1.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(-200.0f, 0, 0) * forceScale);
+			goose->GetPhysicsObject()->AddForce(Vector3(-200.0f, 0, 0));
 			goose->GetTransform().SetLocalOrientation(orientation);
 			//goose->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
 			//std::cout << goose->GetTransform().GetWorldOrientation() << std::endl;
@@ -314,13 +333,13 @@ void TutorialGame::PlayerMovement(float forceScale) {
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 180.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, 200.0f) * forceScale);
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, 200.0f));
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 1.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(200.0f, 0, 0) * forceScale);
+			goose->GetPhysicsObject()->AddForce(Vector3(200.0f, 0, 0));
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 
@@ -360,9 +379,7 @@ bool TutorialGame::SelectObject() {
 	}
 	if (inSelectionMode) {
 		//renderer->DrawString("Press Q to change to camera mode!", Vector2(10, 0));
-
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
-			
 			if (selectionObject) {	//set colour to deselected;
 				selectionObject->GetRenderObject()->SetColour(originalColour);
 				selectionObject = nullptr;
@@ -464,16 +481,16 @@ void TutorialGame::InitWorld() {
 	timeLeft = 180;
 
 	/****************LEVEL FOUNDATION*****************/
-	home = AddFloorToWorld(Vector3(0, 2, -40), Vector3(10, 0.5, 10), "Home", CollisionType::HOME);
+	home = AddFloorToWorld(Vector3(0, 1.2, -40), Vector3(10, 0.2, 10), "Home", CollisionType::HOME);
 	lake = AddLakeToWorld(Vector3(0, 0, -40), Vector3(40, 1, 50));
 
 	AddWallToWorld(Vector3(0, 4, 12), Vector3(40, 6, 2));
 	AddWallToWorld(Vector3(-41, 4, -40), Vector3(1, 6, 50));
 	AddWallToWorld(Vector3(41, 4, -40), Vector3(1, 6, 50));
 
-	AddFloorToWorld(Vector3(0, 0, -290), Vector3(200, 2, 200));
+	AddFloorToWorld(Vector3(0, 0, -290), Vector3(220, 2, 200));
 	// left wall
-	AddWallToWorld(Vector3(-202, 8, -290), Vector3(2, 10, 200));
+	AddWallToWorld(Vector3(-202, 12, -290), Vector3(2, 10, 200));
 	// right wall
 	AddWallToWorld(Vector3(202, 8, -290), Vector3(2, 10, 200));
 	// back wall
@@ -525,6 +542,8 @@ void TutorialGame::InitWorld() {
 	AddWallToWorld(Vector3(-61, 5, -246), Vector3(1, 3, 85));
 
 	AddWallToWorld(Vector3(-160, 5, -180), Vector3(40, 3, 1));
+	// maze block stopper
+	AddWallToWorld(Vector3(-180, 5, -178), Vector3(1, 3, 1));
 	AddWallToWorld(Vector3(-121, 5, -186), Vector3(1, 3, 5));
 	AddWallToWorld(Vector3(-111, 5, -192), Vector3(11, 3, 1));
 	AddWallToWorld(Vector3(-101, 5, -186), Vector3(1, 3, 5));
@@ -539,14 +558,15 @@ void TutorialGame::InitWorld() {
 	AddWallToWorld(Vector3(-140, 5, -310), Vector3(60, 3, 1));
 	AddWallToWorld(Vector3(-81, 5, -321), Vector3(1, 3, 10));
 	AddWallToWorld(Vector3(-71, 5, -332), Vector3(11, 3, 1));
+	AddWallToWorld(Vector3(-74, 5, -329), Vector3(6, 3, 2));
 
 	AddWallToWorld(Vector3(-81, 5, -266), Vector3(1, 3, 30));
 	AddWallToWorld(Vector3(-90, 5, -235), Vector3(10, 3, 1));
 	AddWallToWorld(Vector3(-101, 5, -226), Vector3(1, 3, 10));
 
-	dynamicCube[0] = AddCubeToWorld(Vector3(-71, 6, -170), Vector3(8, 4, 8));
-	dynamicCube[1] = AddCubeToWorld(Vector3(-191, 6, -200), Vector3(8, 4, 8));
-	dynamicCube[2] = AddCubeToWorld(Vector3(-71, 6, -315), Vector3(8, 4, 8));
+	dynamicCube[0] = AddDynamicCubeToWorld(Vector3(-71, 6, -170), Vector3(8, 4, 8), 0.001f);
+	dynamicCube[1] = AddDynamicCubeToWorld(Vector3(-191, 6, -200), Vector3(8, 4, 8), 0.001f);
+	dynamicCube[2] = AddDynamicCubeToWorld(Vector3(-71, 6, -305), Vector3(8, 4, 8), 0.001f);
 	/*************************************************/
 
 	/*******************TRAMPOLINE AREA***************/
@@ -560,8 +580,7 @@ void TutorialGame::InitWorld() {
 	AddWallToWorld(Vector3(105, 5, -461), Vector3(6, 3, 1));
 	AddWallToWorld(Vector3(110, 5, -450), Vector3(1, 3, 10));
 
-	// @TODO make this harder to push
-	AddCubeToWorld(Vector3(105.5, 4, -436.5), Vector3(5, 2, 3));
+	AddCubeToWorld(Vector3(105.5, 4, -436.5), Vector3(5, 2, 3), 0.1f);
 	/*************************************************/
 
 	/*******************JUMPING PUZZLE****************/
@@ -700,6 +719,7 @@ GameObject* TutorialGame::AddWallToWorld(const Vector3& position, Vector3 dimens
 
 	wall->GetPhysicsObject()->SetInverseMass(0);
 	wall->GetPhysicsObject()->InitCubeInertia();
+	wall->GetPhysicsObject()->SetCollisionType(CollisionType::WALL);
 
 	world->AddGameObject(wall);
 
@@ -720,7 +740,7 @@ GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimens
 	gate->SetRenderObject(new RenderObject(&gate->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.6f, 0.2f, 1.0f)));
 	gate->SetPhysicsObject(new PhysicsObject(&gate->GetTransform(), gate->GetBoundingVolume()));
 
-	gate->GetPhysicsObject()->SetInverseMass(10);
+	gate->GetPhysicsObject()->SetInverseMass(0.5);
 	gate->GetPhysicsObject()->InitCubeInertia();
 
 	world->AddGameObject(gate);
@@ -789,10 +809,35 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	return cube;
 }
 
+GameObject* TutorialGame::AddDynamicCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
+	string name = "DynamicCube";
+
+	GameObject* cube = new GameObject(name);
+
+	AABBVolume* volume = new AABBVolume(dimensions);
+
+	cube->SetBoundingVolume((CollisionVolume*)volume);
+
+	cube->GetTransform().SetWorldPosition(position);
+	cube->GetTransform().SetWorldScale(dimensions);
+
+	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+
+	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
+	cube->GetPhysicsObject()->InitCubeInertia();
+	cube->GetPhysicsObject()->SetCollisionType(CollisionType::IMMOVABLE);
+
+	world->AddGameObject(cube);
+
+	return cube;
+}
+
 GameObject* TutorialGame::AddGooseToWorld(const Vector3& position)
 {
 	float size			= 1.0f;
 	float inverseMass	= 1.0f;
+	float elasticity	= 0.2f;
 
 	GameObject* goose = new GameObject("Goose");
 
@@ -807,6 +852,7 @@ GameObject* TutorialGame::AddGooseToWorld(const Vector3& position)
 	goose->SetPhysicsObject(new PhysicsObject(&goose->GetTransform(), goose->GetBoundingVolume()));
 
 	goose->GetPhysicsObject()->SetInverseMass(inverseMass);
+	goose->GetPhysicsObject()->SetElasticity(elasticity);
 	goose->GetPhysicsObject()->InitSphereInertia();
 	goose->GetPhysicsObject()->SetCollisionType(CollisionType::PLAYER);
 

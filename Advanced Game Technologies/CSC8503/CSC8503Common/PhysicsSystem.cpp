@@ -302,7 +302,7 @@ void PhysicsSystem::NarrowPhase() {
 			
 			ImpulseResolveCollision(*info.a, *info.b, info.point);
 			// @TODO find a better way of doing this then nested switches... bit of a mess
-			// also need collision with AI and moving boxes
+			// also need collision with AI
 			switch (info.a->GetPhysicsObject()->GetCollisionType()) {
 			case CollisionType::PLAYER:
 				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
@@ -336,7 +336,15 @@ void PhysicsSystem::NarrowPhase() {
 				break;
 			case CollisionType::FLOOR:
 				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::PLAYER)
-					info.b->SetCollidedWith(CollisionType::FLOOR);
+					info.b->SetCollidedWith(CollisionType::FLOOR); 
+				break;
+			case CollisionType::IMMOVABLE:
+				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::WALL)
+					info.a->SetCollidedWith(CollisionType::WALL); 
+				break;
+			case CollisionType::WALL:
+				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::IMMOVABLE)
+					info.b->SetCollidedWith(CollisionType::WALL);
 				break;
 			default:
 				info.a->SetCollidedWith(CollisionType::DEFAULT); info.b->SetCollidedWith(CollisionType::DEFAULT);

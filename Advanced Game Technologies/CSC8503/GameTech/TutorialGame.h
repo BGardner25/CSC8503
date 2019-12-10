@@ -36,16 +36,18 @@ namespace NCL {
 			void DebugObjectMovement();
 			void LockedObjectMovement();
 			void LockedCameraMovement();
-			void PlayerMovement(float forceScale = 1.0f);
+			void PlayerMovement();
 			void InitMisc();
 			void ResetCollectables();
 			void ResetGame();
+			void UpdateMovingBlocks();
 
 			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), 
 											string name = "Floor", CollisionType collisionType = CollisionType::FLOOR);
 			GameObject* AddWallToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Wall");
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f, bool hollow = false);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, bool collectable = false);
+			GameObject* AddDynamicCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
 			//IT'S HAPPENING
 			GameObject* AddGooseToWorld(const Vector3& position);
 			GameObject* AddParkKeeperToWorld(const Vector3& position);
@@ -115,6 +117,7 @@ namespace NCL {
 			int timeLeft = 180;
 			float timePassed = 0;
 			bool canJump = true;
+			float cubeDirection[3] = { 1.0f, 1.0f, 1.0f };
 		};
 	}
 }
