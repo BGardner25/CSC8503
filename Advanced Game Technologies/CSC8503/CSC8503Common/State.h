@@ -1,5 +1,5 @@
 #pragma once
-
+#include "GameObject.h"
 namespace NCL {
 	namespace CSC8503 {
 		class State		{
@@ -10,6 +10,7 @@ namespace NCL {
 		};
 
 		typedef void(*StateFunc)(void*);
+		typedef void(*SentryFunc)(GameObject* sentry, GameObject* player);
 
 		class GenericState : public State		{
 		public:
@@ -25,6 +26,27 @@ namespace NCL {
 		protected:
 			StateFunc func;
 			void* funcData;
+		};
+
+		class SentryState : public State {
+		public:
+			SentryState(SentryFunc someFunc, GameObject* sentry, GameObject* player) {
+				func = someFunc;
+				this->sentry = sentry;
+				this->player = player;
+				this->distanceToPlayer = distanceToPlayer;
+			}
+
+			virtual void Update() {
+				if (sentry == nullptr || player == nullptr)
+					return;
+				func(sentry, player);
+			}
+		protected:
+			SentryFunc func;
+			GameObject* sentry;
+			GameObject* player;
+			float distanceToPlayer;
 		};
 	}
 }

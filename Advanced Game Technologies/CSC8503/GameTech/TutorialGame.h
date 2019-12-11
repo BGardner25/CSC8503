@@ -1,7 +1,9 @@
 #pragma once
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/PhysicsSystem.h"
-
+#include "../CSC8503Common/StateMachine.h"
+#include "../CSC8503Common/StateTransition.h"
+#include "../CSC8503Common/State.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -41,9 +43,12 @@ namespace NCL {
 			void ResetCollectables();
 			void ResetGame();
 			void UpdateMovingBlocks();
+			void SentryStateMachine();
 
 			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), 
 											string name = "Floor", CollisionType collisionType = CollisionType::FLOOR);
+			GameObject* AddOBBFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100),
+				string name = "Floor", CollisionType collisionType = CollisionType::FLOOR);
 			GameObject* AddWallToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), string name = "Wall");
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f, bool hollow = false);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, bool collectable = false);
@@ -118,6 +123,10 @@ namespace NCL {
 			float timePassed = 0;
 			bool canJump = true;
 			float cubeDirection[3] = { 1.0f, 1.0f, 1.0f };
+
+			StateMachine* stateMachine;
+
+			float sentryToGoose = 0;
 		};
 	}
 }

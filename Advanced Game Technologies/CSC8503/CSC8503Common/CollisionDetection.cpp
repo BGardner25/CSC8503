@@ -315,7 +315,7 @@ bool CollisionDetection::OBBSphereIntersection(const OBBVolume& volumeA, const T
 		// move back along normal by sphere radius
 		Vector3 localB = -collisionNormal * volumeB.GetRadius();
 
-		collisionInfo.AddContactPoint(localA, transform * localB, transform * collisionNormal, penetration);
+		collisionInfo.AddContactPoint(transform * localA, transform * localB, transform * collisionNormal, penetration);
 		return true;
 	}
 	return false;

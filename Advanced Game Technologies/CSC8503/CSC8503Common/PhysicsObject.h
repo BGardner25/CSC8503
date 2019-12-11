@@ -55,7 +55,7 @@ namespace NCL {
 			void ApplyAngularImpulse(const Vector3& force);
 			void ApplyLinearImpulse(const Vector3& force);
 			
-			void AddForce(const Vector3& force, float scale = 1.0f);
+			void AddForce(const Vector3& force);
 
 			void AddForceAtPosition(const Vector3& force, const Vector3& position);
 

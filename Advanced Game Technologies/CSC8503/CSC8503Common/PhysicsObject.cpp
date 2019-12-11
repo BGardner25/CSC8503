@@ -29,8 +29,8 @@ void PhysicsObject::ApplyLinearImpulse(const Vector3& force) {
 	linearVelocity += force * inverseMass;
 }
 
-void PhysicsObject::AddForce(const Vector3& addedForce, float scale) {
-	force += addedForce * scale;
+void PhysicsObject::AddForce(const Vector3& addedForce) {
+	force += addedForce;
 }
 
 void PhysicsObject::AddForceAtPosition(const Vector3& addedForce, const Vector3& position) {

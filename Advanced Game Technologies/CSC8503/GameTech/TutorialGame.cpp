@@ -14,6 +14,7 @@ TutorialGame::TutorialGame()	{
 	world		= new GameWorld();
 	renderer	= new GameTechRenderer(*world);
 	physics		= new PhysicsSystem(*world);
+	stateMachine = new StateMachine();
 
 	forceMagnitude	= 10.0f;
 	useGravity		= false;
@@ -65,6 +66,7 @@ TutorialGame::~TutorialGame()	{
 	delete physics;
 	delete renderer;
 	delete world;
+	delete stateMachine;
 
 	delete home;
 	delete goose;
@@ -113,6 +115,9 @@ void TutorialGame::UpdateGame(float dt) {
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 	physics->Update(dt);
+	stateMachine->Update();
+
+	sentryToGoose = (goose->GetTransform().GetWorldPosition() - sentry->GetTransform().GetWorldPosition()).Length();
 
 	timePassed += dt;
 	if (timePassed >= 1.0f && timeLeft > 0) {
@@ -463,9 +468,40 @@ void TutorialGame::InitCamera() {
 
 void TutorialGame::ResetCollectables() {
 	for (GameObject* o : collectedObjects) {
-		// @TODO need bounding volume
+		// @TODO need bounding volume, just falls through floor
 		world->AddGameObject(o);
 	}
+}
+
+void TutorialGame::SentryStateMachine() {	
+
+	SentryFunc idleFunc = [](GameObject* sentry, GameObject* goose) {
+		std::cout << "IN IDLE STATE..." << std::endl;
+	};
+
+	SentryFunc chaseFunc = [](GameObject* sentry, GameObject* goose) {
+		
+		Vector3 dir = goose->GetTransform().GetWorldPosition() - sentry->GetTransform().GetWorldPosition();
+		sentry->GetPhysicsObject()->AddForce(dir * 5.0f);
+		std::cout << "IN CHASE STATE..." << std::endl;
+	};
+
+	SentryState* idleState = new SentryState(idleFunc, sentry, goose);
+	SentryState* chaseState = new SentryState(chaseFunc, sentry, goose);
+
+	stateMachine->AddState(idleState);
+	stateMachine->AddState(chaseState);
+
+	GenericTransition<float&, float>* toChase = new GenericTransition<float&, float>(
+														GenericTransition<float&, float>::LessThanTransition, 
+															sentryToGoose, 40.0f, idleState, chaseState);
+
+	GenericTransition<float&, float>* toIdle = new GenericTransition<float&, float>(
+		GenericTransition<float&, float>::GreaterThanTransition,
+		sentryToGoose, 60.0f, chaseState, idleState);
+
+	stateMachine->AddTransition(toIdle);
+	stateMachine->AddTransition(toChase);
 }
 
 void TutorialGame::InitWorld() {
@@ -508,7 +544,7 @@ void TutorialGame::InitWorld() {
 	// gate area
 	apple[0] = AddAppleToWorld(Vector3(120, 3, -150));
 	// maze
-	apple[1] = AddAppleToWorld(Vector3(-95, 3, -225));
+	apple[1] = AddAppleToWorld(Vector3(-88, 3, -225));
 	// trampoline area
 	apple[2] = AddAppleToWorld(Vector3(150, 3, -420));
 	// jumping puzzle
@@ -531,10 +567,10 @@ void TutorialGame::InitWorld() {
 	/*************************************************/
 
 	/******************GATE AREA**********************/
-	gate = AddGateToWorld(Vector3(50, 4, -150), Vector3(0.5, 2, 4));
-	AddWallToWorld(Vector3(50, 5, -118), Vector3(1, 3, 28));
-	AddWallToWorld(Vector3(50, 5, -169), Vector3(1, 3, 15));
-	AddWallToWorld(Vector3(124.5, 5, -185), Vector3(75.5, 3, 1));
+	gate = AddGateToWorld(Vector3(53, 4, -151), Vector3(0.5, 2, 4));
+	AddWallToWorld(Vector3(50, 4, -118), Vector3(1, 2, 28));
+	AddWallToWorld(Vector3(50, 4, -169), Vector3(1, 2, 15));
+	AddWallToWorld(Vector3(124.5, 4, -185), Vector3(75.5, 2, 1));
 	/*************************************************/
 
 	/*******************MAZE AREA*********************/
@@ -563,6 +599,8 @@ void TutorialGame::InitWorld() {
 	AddWallToWorld(Vector3(-81, 5, -266), Vector3(1, 3, 30));
 	AddWallToWorld(Vector3(-90, 5, -235), Vector3(10, 3, 1));
 	AddWallToWorld(Vector3(-101, 5, -226), Vector3(1, 3, 10));
+	AddOBBFloorToWorld(Vector3(-101, 4, -224), Vector3(8, 1, 9));
+	
 
 	dynamicCube[0] = AddDynamicCubeToWorld(Vector3(-71, 6, -170), Vector3(8, 4, 8), 0.001f);
 	dynamicCube[1] = AddDynamicCubeToWorld(Vector3(-191, 6, -200), Vector3(8, 4, 8), 0.001f);
@@ -592,6 +630,7 @@ void TutorialGame::InitWorld() {
 	AddPlatformToWorld(Vector3(50, 12, -465), Vector3(5, 0.25, 5));
 	/*************************************************/
 
+	SentryStateMachine();
 
 	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
 	AddGooseToWorld(Vector3(30, 2, 0));
@@ -635,6 +674,29 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, Vector3 dimen
 	floor->GetTransform().SetWorldPosition(position);
 
 	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(0.0f, 1.0f, 0.0f, 1.0f)));
+	floor->SetPhysicsObject(new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume()));
+
+	floor->GetPhysicsObject()->SetInverseMass(0);
+	floor->GetPhysicsObject()->InitCubeInertia();
+	floor->GetPhysicsObject()->SetCollisionType(collisionType);
+
+	world->AddGameObject(floor);
+
+	return floor;
+}
+
+GameObject* TutorialGame::AddOBBFloorToWorld(const Vector3& position, Vector3 dimensions, string name, CollisionType collisionType) {
+	GameObject* floor = new GameObject(name);
+
+	OBBVolume* volume = new OBBVolume(dimensions);
+	floor->SetBoundingVolume((CollisionVolume*)volume);
+	floor->GetTransform().SetWorldScale(dimensions);
+	floor->GetTransform().SetWorldPosition(position);
+	Quaternion orientation = Quaternion(Vector3(1.0f, 0.0f, 0.0f), 0.18f);
+	orientation.Normalise();
+	floor->GetTransform().SetLocalOrientation(orientation);
+
+	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.5f, 0.1f, 1.0f)));
 	floor->SetPhysicsObject(new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume()));
 
 	floor->GetPhysicsObject()->SetInverseMass(0);
@@ -733,9 +795,9 @@ GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimens
 	gate->SetBoundingVolume((CollisionVolume*)volume);
 	gate->GetTransform().SetWorldScale(dimensions);
 	gate->GetTransform().SetWorldPosition(position);
-	/*Quaternion orientation = Quaternion(Vector3(0, 0.8, 0), 0.34f);
+	Quaternion orientation = Quaternion(Vector3(0, -0.8, 0), 0.34f);
 	orientation.Normalise();
-	gate->GetTransform().SetLocalOrientation(orientation);*/
+	gate->GetTransform().SetLocalOrientation(orientation);
 
 	gate->SetRenderObject(new RenderObject(&gate->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.6f, 0.2f, 1.0f)));
 	gate->SetPhysicsObject(new PhysicsObject(&gate->GetTransform(), gate->GetBoundingVolume()));
