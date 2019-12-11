@@ -11,6 +11,7 @@ GameObject::GameObject(string objectName)	{
 	physicsObject	= nullptr;
 	renderObject	= nullptr;
 	networkObject	= nullptr;
+	stateDescription = "";
 	//layer			= Layer::NONE;
 }
 

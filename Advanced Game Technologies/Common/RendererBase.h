@@ -41,6 +41,9 @@ namespace NCL {
 				return false;
 			}
 
+			int GetWidth() { return currentWidth; }
+			int GetHeight() { return currentHeight; }
+
 		protected:
 			virtual void OnWindowResize(int w, int h) = 0;
 			virtual void OnWindowDetach() {}; //Most renderers won't care about this

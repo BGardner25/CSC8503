@@ -22,7 +22,7 @@ TutorialGame::TutorialGame()	{
 	inSelectionMode = true;
 
 	Debug::SetRenderer(renderer);
-
+	
 	InitialiseAssets();
 }
 
@@ -70,8 +70,10 @@ TutorialGame::~TutorialGame()	{
 
 	delete home;
 	delete goose;
+	delete sentry;
 	delete lake;
 	delete gate;
+	delete spinner;
 	delete[] apple;
 	delete[] bonusItem;
 	delete[] dynamicCube;
@@ -105,6 +107,9 @@ void TutorialGame::UpdateGame(float dt) {
 	renderer->DrawString("Bonus Items:" + std::to_string(bonusCount), Vector2(10, 21));
 	renderer->DrawString("Total Score:" + std::to_string(totalScore), Vector2(10, 0));
 	renderer->DrawString("Time Left:" + std::to_string(timeLeft), Vector2(0, 63));
+	renderer->DrawString("Obj Pos: ", Vector2(0, renderer->GetHeight() - 20));
+	renderer->DrawString("Obj Orientation: ", Vector2(0, renderer->GetHeight() - 40));
+	renderer->DrawString("Obj AI State: ", Vector2(0, renderer->GetHeight() - 60));
 
 	SelectObject();
 	//MoveSelectedObject();
@@ -129,7 +134,7 @@ void TutorialGame::UpdateGame(float dt) {
 		ResetGame();
 	}
 
-	// @TODO if apple added, decrease score
+	// @TODO if apple/bonus added back to world, decrease score
 	for (GameObject* i : apple) {
 		if (i->IsCollected()) {
 			appleCount++;
@@ -141,6 +146,7 @@ void TutorialGame::UpdateGame(float dt) {
 		if (i->IsCollected()) {
 			bonusCount++;
 			collectedObjects.emplace_back(i);
+			goose->SetHasBonusItem(true);
 			i->SetCollected(false);
 		}
 	}
@@ -148,14 +154,28 @@ void TutorialGame::UpdateGame(float dt) {
 		totalScore += appleCount;
 		totalScore += bonusCount * 5;
 		appleCount = bonusCount = 0;
+		goose->SetHasBonusItem(false);
+		sentry->GetTransform().SetWorldPosition(SENTRY_SPAWN);
 		collectedObjects.clear();
 	}
 	if (goose->HasCollidedWith() == CollisionType::TRAMPOLINE) {
 		goose->SetCollidedWith(CollisionType::DEFAULT);
 		goose->GetPhysicsObject()->AddForce(Vector3(0.0f, 20000.0f, 0.0f));
 	}
+	// display selected object position, orientation and AI state... if any
+	if (displayObjectInfo) {
+		std::ostringstream s;
+		s << selectionObject->GetTransform().GetWorldPosition();
+		renderer->DrawString(s.str(), Vector2(250, renderer->GetHeight() - 20));
+		s.str(string());
+		s << selectionObject->GetTransform().GetWorldOrientation();
+		renderer->DrawString(s.str(), Vector2(480, renderer->GetHeight() - 40));
+		renderer->DrawString(selectionObject->GetStateDescription(), Vector2(390, renderer->GetHeight() - 60));
+	}
 
 	UpdateMovingBlocks();
+	for(GameObject* i : spinner)
+		i->GetPhysicsObject()->AddTorque(Vector3(0.0, 150000.0, 0.0));
 
 	Debug::FlushRenderables();
 	renderer->Render();
@@ -179,9 +199,11 @@ void TutorialGame::UpdateMovingBlocks() {
 
 // @TODO doesnt work if any object has been collected
 void TutorialGame::ResetGame() {
-	InitWorld(); //We can reset the simulation at any time with F1
-	InitMisc();
 	selectionObject = nullptr;
+	delete stateMachine;
+	stateMachine = new StateMachine();
+	InitWorld();
+	InitMisc();
 }
 
 void TutorialGame::UpdateKeys() {
@@ -320,31 +342,30 @@ void TutorialGame::DebugObjectMovement() {
 
 void TutorialGame::PlayerMovement() {
 	if (inSelectionMode) {
+		float speed = 150.0f;
 		Quaternion orientation;
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 0.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, -200.0f));
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, -speed));
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
 			orientation = Quaternion(Vector3(0, 1, 0), -1.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(-200.0f, 0, 0));
+			goose->GetPhysicsObject()->AddForce(Vector3(-speed, 0, 0));
 			goose->GetTransform().SetLocalOrientation(orientation);
-			//goose->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
-			//std::cout << goose->GetTransform().GetWorldOrientation() << std::endl;
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 180.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, 200.0f));
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, speed));
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 1.0f);
 			orientation.Normalise();
-			goose->GetPhysicsObject()->AddForce(Vector3(200.0f, 0, 0));
+			goose->GetPhysicsObject()->AddForce(Vector3(speed, 0, 0));
 			goose->GetTransform().SetLocalOrientation(orientation);
 		}
 
@@ -355,7 +376,7 @@ void TutorialGame::PlayerMovement() {
 		else
 			canJump = false;
 		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::SPACE) && canJump == true) {
-			goose->GetPhysicsObject()->AddForce(Vector3(0, 200.0f, 0) * 20);
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 300.0f, 0) * 20);
 			canJump = false;
 			goose->SetCollidedWith(CollisionType::NONE);
 		}
@@ -397,6 +418,7 @@ bool TutorialGame::SelectObject() {
 				selectionObject = (GameObject*)closestCollision.node;
 				originalColour = selectionObject->GetRenderObject()->GetColour();
 				selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+				displayObjectInfo = true;
 				return true;
 			}
 			else {
@@ -475,14 +497,16 @@ void TutorialGame::ResetCollectables() {
 
 void TutorialGame::SentryStateMachine() {	
 
-	SentryFunc idleFunc = [](GameObject* sentry, GameObject* goose) {
+	SentryFunc idleFunc = [](GameObject* sentry, GooseObject* goose) {
+		sentry->SetStateDescription("idle");
 		std::cout << "IN IDLE STATE..." << std::endl;
 	};
 
-	SentryFunc chaseFunc = [](GameObject* sentry, GameObject* goose) {
-		
+	SentryFunc chaseFunc = [](GameObject* sentry, GooseObject* goose) {
+		sentry->SetStateDescription("chasing/preparing to chase");
 		Vector3 dir = goose->GetTransform().GetWorldPosition() - sentry->GetTransform().GetWorldPosition();
-		sentry->GetPhysicsObject()->AddForce(dir * 5.0f);
+		if(goose->HasBonusItem())
+			sentry->GetPhysicsObject()->AddForce(dir * 5.0f);
 		std::cout << "IN CHASE STATE..." << std::endl;
 	};
 
@@ -538,7 +562,7 @@ void TutorialGame::InitWorld() {
 	/*************************************************/
 
 	/***************OBJECTS***************************/
-	goose = AddGooseToWorld(GOOSE_SPAWN);
+	goose = (GooseObject*)AddGooseToWorld(GOOSE_SPAWN);
 	sentry = AddCharacterToWorld(SENTRY_SPAWN);
 
 	// gate area
@@ -567,10 +591,17 @@ void TutorialGame::InitWorld() {
 	/*************************************************/
 
 	/******************GATE AREA**********************/
-	gate = AddGateToWorld(Vector3(53, 4, -151), Vector3(0.5, 2, 4));
+	gate = AddGateToWorld(Vector3(53, 4, -151), Vector3(0.5, 2, 4), Quaternion(Vector3(0, -0.8, 0), 0.34f));
 	AddWallToWorld(Vector3(50, 4, -118), Vector3(1, 2, 28));
 	AddWallToWorld(Vector3(50, 4, -169), Vector3(1, 2, 15));
 	AddWallToWorld(Vector3(124.5, 4, -185), Vector3(75.5, 2, 1));
+	
+	spinner[0] = AddSpinnerToWorld(Vector3(90, 4, -151), Vector3(0.5, 2, 4));
+	spinner[1] = AddSpinnerToWorld(Vector3(90, 4, -121), Vector3(0.5, 2, 4));
+	spinner[2] = AddSpinnerToWorld(Vector3(110, 4, -131), Vector3(0.5, 2, 4));
+	spinner[3] = AddSpinnerToWorld(Vector3(140, 4, -151), Vector3(0.5, 2, 4));
+	spinner[4] = AddSpinnerToWorld(Vector3(140, 4, -121), Vector3(0.5, 2, 4));
+	spinner[5] = AddSpinnerToWorld(Vector3(160, 4, -131), Vector3(0.5, 2, 4));
 	/*************************************************/
 
 	/*******************MAZE AREA*********************/
@@ -601,7 +632,6 @@ void TutorialGame::InitWorld() {
 	AddWallToWorld(Vector3(-101, 5, -226), Vector3(1, 3, 10));
 	AddOBBFloorToWorld(Vector3(-101, 4, -224), Vector3(8, 1, 9));
 	
-
 	dynamicCube[0] = AddDynamicCubeToWorld(Vector3(-71, 6, -170), Vector3(8, 4, 8), 0.001f);
 	dynamicCube[1] = AddDynamicCubeToWorld(Vector3(-191, 6, -200), Vector3(8, 4, 8), 0.001f);
 	dynamicCube[2] = AddDynamicCubeToWorld(Vector3(-71, 6, -305), Vector3(8, 4, 8), 0.001f);
@@ -631,31 +661,6 @@ void TutorialGame::InitWorld() {
 	/*************************************************/
 
 	SentryStateMachine();
-
-	/*InitMixedGridWorld(10, 10, 3.5f, 3.5f);
-	AddGooseToWorld(Vector3(30, 2, 0));
-	AddAppleToWorld(Vector3(35, 2, 0));
-
-	AddParkKeeperToWorld(Vector3(40, 2, 0));
-	AddCharacterToWorld(Vector3(45, 2, 0));
-
-	AddCubeToWorld(Vector3(0, 5, 0), Vector3(1, 2, 4));
-	AddSphereToWorld(Vector3(0, 10, -10), 2.0f, 10.0f, true);
-	AddSphereToWorld(Vector3(0, 10, -20), 2.0f, 10.0f, false);
-
-	
-	GameObject* rubberSphere = AddSphereToWorld(Vector3(-10, 20, -10), 2.0f, 10.0f, false);
-	GameObject* steelSphere = AddSphereToWorld(Vector3(-10, 20, -20), 2.0f, 10.0f, false);
-
-	PhysicsObject* rPhys = rubberSphere->GetPhysicsObject();
-	PhysicsObject* sPhys = steelSphere->GetPhysicsObject();
-
-	rPhys->SetElasticity(0.95);
-	sPhys->SetElasticity(0.20);
-	*/
-
-	// second floor... initmixedgridworld adds floor also
-	//AddFloorToWorld(Vector3(0, -2, 0));
 }
 
 //From here on it's functions to add in objects to the world!
@@ -788,14 +793,13 @@ GameObject* TutorialGame::AddWallToWorld(const Vector3& position, Vector3 dimens
 	return wall;
 }
 
-GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimensions, string name) {
+GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimensions, Quaternion orientation, string name) {
 	GameObject* gate = new GameObject(name);
 
 	OBBVolume* volume = new OBBVolume(dimensions);
 	gate->SetBoundingVolume((CollisionVolume*)volume);
 	gate->GetTransform().SetWorldScale(dimensions);
 	gate->GetTransform().SetWorldPosition(position);
-	Quaternion orientation = Quaternion(Vector3(0, -0.8, 0), 0.34f);
 	orientation.Normalise();
 	gate->GetTransform().SetLocalOrientation(orientation);
 
@@ -808,6 +812,25 @@ GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimens
 	world->AddGameObject(gate);
 
 	return gate;
+}
+
+GameObject* TutorialGame::AddSpinnerToWorld(const Vector3& position, Vector3 dimensions, string name) {
+	GameObject* spinner = new GameObject(name);
+
+	OBBVolume* volume = new OBBVolume(dimensions);
+	spinner->SetBoundingVolume((CollisionVolume*)volume);
+	spinner->GetTransform().SetWorldScale(dimensions);
+	spinner->GetTransform().SetWorldPosition(position);
+
+	spinner->SetRenderObject(new RenderObject(&spinner->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.6f, 0.2f, 1.0f)));
+	spinner->SetPhysicsObject(new PhysicsObject(&spinner->GetTransform(), spinner->GetBoundingVolume()));
+
+	spinner->GetPhysicsObject()->SetInverseMass(0.001f);
+	spinner->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(spinner);
+
+	return spinner;
 }
 
 /*
@@ -895,14 +918,12 @@ GameObject* TutorialGame::AddDynamicCubeToWorld(const Vector3& position, Vector3
 	return cube;
 }
 
-GameObject* TutorialGame::AddGooseToWorld(const Vector3& position)
-{
+GameObject* TutorialGame::AddGooseToWorld(const Vector3& position) {
 	float size			= 1.0f;
 	float inverseMass	= 1.0f;
 	float elasticity	= 0.2f;
 
-	GameObject* goose = new GameObject("Goose");
-
+	GooseObject* goose = new GooseObject("Goose");
 
 	SphereVolume* volume = new SphereVolume(size);
 	goose->SetBoundingVolume((CollisionVolume*)volume);
@@ -920,7 +941,7 @@ GameObject* TutorialGame::AddGooseToWorld(const Vector3& position)
 
 	world->AddGameObject(goose);
 
-	return goose;
+	return (GameObject*)goose;
 }
 
 GameObject* TutorialGame::AddParkKeeperToWorld(const Vector3& position)
@@ -1084,4 +1105,3 @@ void TutorialGame::SimpleGJKTest() {
 	newFloor->SetBoundingVolume((CollisionVolume*)new OBBVolume(floorDimensions));
 
 }
-

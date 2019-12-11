@@ -22,7 +22,7 @@ namespace NCL {
 		class GameObject	{
 		public:
 			GameObject(string name = "");
-			~GameObject();
+			virtual ~GameObject();
 
 			void SetBoundingVolume(CollisionVolume* vol) {
 				boundingVolume = vol;
@@ -92,6 +92,9 @@ namespace NCL {
 			/*void SetLayer(Layer layer) { this->layer = layer; }
 			Layer GetLayer() const { return layer; }*/
 
+			void SetStateDescription(string description) { stateDescription = description; }
+			string GetStateDescription() const { return stateDescription; }
+
 		protected:
 			Transform			transform;
 
@@ -101,9 +104,10 @@ namespace NCL {
 			NetworkObject*		networkObject;
 
 			bool	isActive;
-			bool isCollectable;
-			bool collected;
+			bool	isCollectable;
+			bool	collected;
 			string	name;
+			string	stateDescription;
 
 			Vector3 broadphaseAABB;
 

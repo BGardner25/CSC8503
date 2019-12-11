@@ -168,7 +168,7 @@ namespace NCL {
 			inline bool	operator!=(const Vector3 &A)const { return (A.x == x && A.y == y && A.z == z) ? false : true; };
 
 			inline friend std::ostream& operator<<(std::ostream& o, const Vector3& v) {
-				o << "Vector3(" << v.x << "," << v.y << "," << v.z << ")" << std::endl;
+				o << "(" << v.x << "," << v.y << "," << v.z << ")" << std::endl;
 				return o;
 			}
 		};

@@ -4,6 +4,9 @@
 #include "../CSC8503Common/StateMachine.h"
 #include "../CSC8503Common/StateTransition.h"
 #include "../CSC8503Common/State.h"
+#include "../CSC8503Common//GooseObject.h"
+#include <sstream>
+#include <iomanip>
 
 namespace NCL {
 	namespace CSC8503 {
@@ -59,9 +62,10 @@ namespace NCL {
 			GameObject* AddCharacterToWorld(const Vector3& position);
 			GameObject* AddAppleToWorld(const Vector3& position);
 			GameObject* AddLakeToWorld(const Vector3& position, Vector3 dimensions, string name = "Lake");
-			GameObject* AddGateToWorld(const Vector3& position, Vector3 dimensions, string name = "Gate");
+			GameObject* AddGateToWorld(const Vector3& position, Vector3 dimensions, Quaternion orientation, string name = "Gate");
 			GameObject* AddTrampolineToWorld(const Vector3& position, Vector3 dimensions, string name = "Trampoline");
 			GameObject* AddPlatformToWorld(const Vector3& position, Vector3 dimensions, string name = "Platform");
+			GameObject* AddSpinnerToWorld(const Vector3& position, Vector3 dimensions, string name = "Spinner");
 
 
 			GameTechRenderer*	renderer;
@@ -96,10 +100,11 @@ namespace NCL {
 			}
 
 			GameObject* home = nullptr;
-			GameObject* goose = nullptr;
+			GooseObject* goose = nullptr;
 			GameObject* sentry = nullptr;
 			GameObject* lake = nullptr;
 			GameObject* gate = nullptr;
+			GameObject* spinner[6];
 			GameObject* apple[5];
 			GameObject* bonusItem[6];
 			GameObject* dynamicCube[3];
@@ -127,6 +132,7 @@ namespace NCL {
 			StateMachine* stateMachine;
 
 			float sentryToGoose = 0;
+			bool displayObjectInfo = false;
 		};
 	}
 }
