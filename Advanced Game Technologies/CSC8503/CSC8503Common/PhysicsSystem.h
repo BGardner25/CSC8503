@@ -44,8 +44,7 @@ namespace NCL {
 
 			void ImpulseResolveCollision(GameObject& a , GameObject&b, CollisionDetection::ContactPoint& p) const;
 			void CollectableCollision(GameObject& collectableObject);
-			// moving cube collision
-
+			
 			GameWorld& gameWorld;
 
 			bool	applyGravity;

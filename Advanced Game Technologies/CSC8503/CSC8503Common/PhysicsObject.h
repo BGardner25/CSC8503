@@ -20,6 +20,7 @@ namespace NCL {
 			COLLECTABLE,
 			IMMOVABLE,
 			TRAMPOLINE,
+			AI,
 			NONE
 		};
 
@@ -87,6 +88,9 @@ namespace NCL {
 			void SetCollisionType(const CollisionType collisionType) { this->collisionType = collisionType; }
 			CollisionType GetCollisionType() const { return collisionType; }
 
+			void SetUseGravity(bool state) { useGravity = state; }
+			bool UseGravity() const { return useGravity; }
+
 		protected:
 			const CollisionVolume* volume;
 			Transform*		transform;
@@ -107,6 +111,8 @@ namespace NCL {
 			Matrix3 inverseInteriaTensor;
 
 			CollisionType collisionType;
+
+			bool useGravity;
 		};
 	}
 }

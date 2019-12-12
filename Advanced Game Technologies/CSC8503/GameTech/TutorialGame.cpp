@@ -138,14 +138,14 @@ void TutorialGame::UpdateGame(float dt) {
 	for (GameObject* i : apple) {
 		if (i->IsCollected()) {
 			appleCount++;
-			collectedObjects.emplace_back(i);
+			collectedApples.emplace_back(i);
 			i->SetCollected(false);
 		}
 	}
 	for (GameObject* i : bonusItem) {
 		if (i->IsCollected()) {
 			bonusCount++;
-			collectedObjects.emplace_back(i);
+			collectedBonus.emplace_back(i);
 			goose->SetHasBonusItem(true);
 			i->SetCollected(false);
 		}
@@ -156,11 +156,20 @@ void TutorialGame::UpdateGame(float dt) {
 		appleCount = bonusCount = 0;
 		goose->SetHasBonusItem(false);
 		sentry->GetTransform().SetWorldPosition(SENTRY_SPAWN);
-		collectedObjects.clear();
+		collectedApples.clear();
+		collectedBonus.clear();
 	}
 	if (goose->HasCollidedWith() == CollisionType::TRAMPOLINE) {
 		goose->SetCollidedWith(CollisionType::DEFAULT);
 		goose->GetPhysicsObject()->AddForce(Vector3(0.0f, 20000.0f, 0.0f));
+	}
+	if (goose->HasCollidedWith() == CollisionType::AI) {
+		goose->SetCollidedWith(CollisionType::DEFAULT);
+		goose->SetHasBonusItem(false);
+		for (GameObject* i : collectedBonus)
+			i->GetTransform().SetWorldPosition(i->GetSpawnPos());
+		collectedBonus.clear();
+		bonusCount = 0;
 	}
 	// display selected object position, orientation and AI state... if any
 	if (displayObjectInfo) {
@@ -223,9 +232,6 @@ void TutorialGame::UpdateKeys() {
 		useBroadPhase = !useBroadPhase;
 		physics->UseBroadPhase(useBroadPhase);
 	}*/
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::R)) {
-		ResetCollectables();
-	}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
 	//allowing the other one to stretch too much etc. Shuffling the order so that it
@@ -343,6 +349,7 @@ void TutorialGame::DebugObjectMovement() {
 void TutorialGame::PlayerMovement() {
 	if (inSelectionMode) {
 		float speed = 150.0f;
+		// @TODO change to torque based orientation
 		Quaternion orientation;
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 0.0f);
@@ -426,12 +433,12 @@ bool TutorialGame::SelectObject() {
 			}
 		}
 		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
-			if (selectionObject) {
-				if (lockedObject == selectionObject) {
+			if (goose) {
+				if (lockedObject == goose) {
 					lockedObject = nullptr;
 				}
 				else {
-					lockedObject = selectionObject;
+					lockedObject = goose;
 				}
 			}
 		}
@@ -488,13 +495,6 @@ void TutorialGame::InitCamera() {
 	lockedObject = nullptr;
 }
 
-void TutorialGame::ResetCollectables() {
-	for (GameObject* o : collectedObjects) {
-		// @TODO need bounding volume, just falls through floor
-		world->AddGameObject(o);
-	}
-}
-
 void TutorialGame::SentryStateMachine() {	
 
 	SentryFunc idleFunc = [](GameObject* sentry, GooseObject* goose) {
@@ -504,9 +504,17 @@ void TutorialGame::SentryStateMachine() {
 
 	SentryFunc chaseFunc = [](GameObject* sentry, GooseObject* goose) {
 		sentry->SetStateDescription("chasing/preparing to chase");
-		Vector3 dir = goose->GetTransform().GetWorldPosition() - sentry->GetTransform().GetWorldPosition();
-		if(goose->HasBonusItem())
-			sentry->GetPhysicsObject()->AddForce(dir * 5.0f);
+		Vector3 goosePos = goose->GetTransform().GetWorldPosition();
+		Vector3 sentryPos = sentry->GetTransform().GetWorldPosition();
+		Vector3 directionVec = goosePos - sentryPos;
+		if (goose->HasBonusItem()) {
+			sentry->GetPhysicsObject()->AddForce(directionVec * 5.0f);
+			//http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
+			float gooseAngle = atan2(directionVec.x, directionVec.z);
+			// only rotate around y axis
+			Quaternion orientation = Quaternion(0.0f, sin(gooseAngle * 0.5f), 0.0f, cos(gooseAngle * 0.5f));
+			sentry->GetTransform().SetLocalOrientation(orientation);
+		}
 		//std::cout << "IN CHASE STATE..." << std::endl;
 	};
 
@@ -630,7 +638,10 @@ void TutorialGame::InitWorld() {
 	AddWallToWorld(Vector3(-81, 5, -266), Vector3(1, 3, 30));
 	AddWallToWorld(Vector3(-90, 5, -235), Vector3(10, 3, 1));
 	AddWallToWorld(Vector3(-101, 5, -226), Vector3(1, 3, 10));
+	// ramp
 	AddOBBFloorToWorld(Vector3(-101, 4, -224), Vector3(8, 1, 9));
+	// maze block stopper
+	AddWallToWorld(Vector3(-79, 5, -235), Vector3(1, 3, 1));
 	
 	dynamicCube[0] = AddDynamicCubeToWorld(Vector3(-71, 6, -170), Vector3(8, 4, 8), 0.001f);
 	dynamicCube[1] = AddDynamicCubeToWorld(Vector3(-191, 6, -200), Vector3(8, 4, 8), 0.001f);
@@ -878,6 +889,8 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	cube->GetTransform().SetWorldPosition(position);
 	cube->GetTransform().SetWorldScale(dimensions);
 
+	cube->SetSpawnPos(position);
+
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 	if (collectable) {
 		cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(0.0f, 0.5f, 0.5f, 1.0f)));
@@ -933,6 +946,8 @@ GameObject* TutorialGame::AddGooseToWorld(const Vector3& position) {
 
 	goose->SetRenderObject(new RenderObject(&goose->GetTransform(), gooseMesh, nullptr, basicShader));
 	goose->SetPhysicsObject(new PhysicsObject(&goose->GetTransform(), goose->GetBoundingVolume()));
+
+	goose->SetSpawnPos(GOOSE_SPAWN);
 
 	goose->GetPhysicsObject()->SetInverseMass(inverseMass);
 	goose->GetPhysicsObject()->SetElasticity(elasticity);
@@ -998,6 +1013,7 @@ GameObject* TutorialGame::AddCharacterToWorld(const Vector3& position) {
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
 	character->GetPhysicsObject()->InitCubeInertia();
+	character->GetPhysicsObject()->SetCollisionType(CollisionType::AI);
 
 	world->AddGameObject(character);
 
@@ -1012,6 +1028,8 @@ GameObject* TutorialGame::AddAppleToWorld(const Vector3& position) {
 	apple->GetTransform().SetWorldScale(Vector3(4, 4, 4));
 	apple->GetTransform().SetWorldPosition(position);
 	apple->SetCollectable(true);
+
+	apple->SetSpawnPos(position);
 
 	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), appleMesh, nullptr, basicShader, Vector4(1.0f, 0.0f, 0.0f, 1.0f)));
 	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));

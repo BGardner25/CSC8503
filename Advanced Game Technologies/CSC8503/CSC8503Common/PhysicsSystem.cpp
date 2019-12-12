@@ -18,6 +18,7 @@ PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
 	dTOffset		= 0.0f;
 	globalDamping	= 0.95f;
 	// gravity * 10 as an easy way to reduce 'floaty' feeling throughout the game
+	// gravity * 10 as an easy way to reduce 'floaty' feeling throughout the game
 	SetGravity(Vector3(0.0f, -9.8f * 10.0f, 0.0f));
 }
 
@@ -247,8 +248,10 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 }
 
 void PhysicsSystem::CollectableCollision(GameObject& collectableObject) {
-	gameWorld.RemoveGameObject(&collectableObject);
-	collectableObject.SetBoundingVolume(nullptr);
+	collectableObject.GetPhysicsObject()->SetUseGravity(false);
+	// if collected, move object outside of game world... prevents issues with deleting and resetting objects
+	// if number of collectable objects were many, this wouldn't be a good solution... but in this game there's only 11
+	collectableObject.GetTransform().SetWorldPosition(Vector3(0, -50, -40));
 	collectableObject.SetCollected(true);
 }
 
@@ -302,7 +305,6 @@ void PhysicsSystem::NarrowPhase() {
 			
 			ImpulseResolveCollision(*info.a, *info.b, info.point);
 			// @TODO find a better way of doing this then nested switches... bit of a mess
-			// also need collision with AI
 			switch (info.a->GetPhysicsObject()->GetCollisionType()) {
 			case CollisionType::PLAYER:
 				switch (info.b->GetPhysicsObject()->GetCollisionType()) {
@@ -316,6 +318,8 @@ void PhysicsSystem::NarrowPhase() {
 					info.a->SetCollidedWith(CollisionType::HOME); break;
 				case CollisionType::FLOOR:
 					info.a->SetCollidedWith(CollisionType::FLOOR); break;
+				case CollisionType::AI:
+					info.a->SetCollidedWith(CollisionType::AI); break;
 				}
 				break;
 			case CollisionType::LAKE:
@@ -345,6 +349,10 @@ void PhysicsSystem::NarrowPhase() {
 			case CollisionType::WALL:
 				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::IMMOVABLE)
 					info.b->SetCollidedWith(CollisionType::WALL);
+				break;
+			case CollisionType::AI:
+				if (info.b->GetPhysicsObject()->GetCollisionType() == CollisionType::PLAYER)
+					info.b->SetCollidedWith(CollisionType::AI);
 				break;
 			default:
 				info.a->SetCollidedWith(CollisionType::DEFAULT); info.b->SetCollidedWith(CollisionType::DEFAULT);
@@ -381,7 +389,7 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 		Vector3 accel = force * inverseMass;
 
 		// don't do this for objects that can't be moved
-		if (applyGravity && inverseMass > 0)
+		if (applyGravity && inverseMass > 0 && (*i)->GetPhysicsObject()->UseGravity())
 			accel += gravity;
 
 		linearVel += accel * dt;	// integrate acceleration

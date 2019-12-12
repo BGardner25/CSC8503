@@ -43,7 +43,6 @@ namespace NCL {
 			void LockedCameraMovement();
 			void PlayerMovement();
 			void InitMisc();
-			void ResetCollectables();
 			void ResetGame();
 			void UpdateMovingBlocks();
 			void SentryStateMachine();
@@ -122,7 +121,9 @@ namespace NCL {
 
 			Vector4 originalColour = Vector4(1, 1, 1, 1);
 
-			std::vector<GameObject*> collectedObjects;
+			std::vector<GameObject*> collectedApples;
+			std::vector<GameObject*> collectedBonus;
+
 
 			int timeLeft = 180;
 			float timePassed = 0;

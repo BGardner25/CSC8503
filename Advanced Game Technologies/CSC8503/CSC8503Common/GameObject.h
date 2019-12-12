@@ -75,7 +75,6 @@ namespace NCL {
 			}
 
 			virtual void OnCollisionBegin(GameObject* otherObject) {
-				//std::cout << "OnCollisionBegin event occured!\n";
 			}
 
 			virtual void OnCollisionEnd(GameObject* otherObject) {
@@ -95,6 +94,9 @@ namespace NCL {
 			void SetStateDescription(string description) { stateDescription = description; }
 			string GetStateDescription() const { return stateDescription; }
 
+			void SetSpawnPos(const Vector3& pos) { spawnPos = pos; }
+			Vector3 GetSpawnPos() const { return spawnPos; }
+
 		protected:
 			Transform			transform;
 
@@ -112,6 +114,8 @@ namespace NCL {
 			Vector3 broadphaseAABB;
 
 			CollisionType collisionType;
+
+			Vector3 spawnPos;
 			//Layer layer;
 		};
 	}

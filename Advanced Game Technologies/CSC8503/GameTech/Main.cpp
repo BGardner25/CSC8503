@@ -108,11 +108,19 @@ void TestNetworking() {
 
 vector<Vector3> testNodes;
 
+// how many units on each axis is each grid
+// how many grid nodes across
+// how many grid nodes down
+
 void TestPathfinding() {
 	NavigationGrid grid("TestGrid1.txt");
+	//NavigationGrid grid("CourseworkMap.txt");
 
 	NavigationPath outPath;
 	
+	//Vector3 startPos(10, 0, 50);
+	//Vector3 endPos(20, 0, 220);
+
 	Vector3 startPos(80, 0, 10);
 	Vector3 endPos(80, 0, 80);
 
@@ -154,8 +162,8 @@ int main() {
 	}	
 
 	//TestStateMachine();
-	TestNetworking();
-	TestPathfinding();
+	//TestNetworking();
+	//TestPathfinding();
 	
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);

@@ -312,6 +312,7 @@ bool CollisionDetection::OBBSphereIntersection(const OBBVolume& volumeA, const T
 		float penetration = (volumeB.GetRadius() - distance);
 		// move along collision normal by box half size
 		Vector3 localA = collisionNormal * volumeA.GetHalfDimensions();
+		//Vector3 localA = closestPointOnBox;
 		// move back along normal by sphere radius
 		Vector3 localB = -collisionNormal * volumeB.GetRadius();
 
