@@ -499,22 +499,24 @@ void TutorialGame::SentryStateMachine() {
 
 	SentryFunc idleFunc = [](GameObject* sentry, GooseObject* goose) {
 		sentry->SetStateDescription("idle");
+		Vector3 directionVec = goose->GetTransform().GetWorldPosition() - sentry->GetTransform().GetWorldPosition();
+		float gooseAngle = atan2(directionVec.x, directionVec.z);
+		// only rotate around y axis
+		Quaternion orientation = Quaternion(0.0f, sin(gooseAngle * 0.5f), 0.0f, cos(gooseAngle * 0.5f));
+		sentry->GetTransform().SetLocalOrientation(orientation);
 		//std::cout << "IN IDLE STATE..." << std::endl;
 	};
 
 	SentryFunc chaseFunc = [](GameObject* sentry, GooseObject* goose) {
 		sentry->SetStateDescription("chasing/preparing to chase");
-		Vector3 goosePos = goose->GetTransform().GetWorldPosition();
-		Vector3 sentryPos = sentry->GetTransform().GetWorldPosition();
-		Vector3 directionVec = goosePos - sentryPos;
-		if (goose->HasBonusItem()) {
+		Vector3 directionVec = goose->GetTransform().GetWorldPosition() - sentry->GetTransform().GetWorldPosition();
+		//http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
+		float gooseAngle = atan2(directionVec.x, directionVec.z);
+		// only rotate around y axis
+		Quaternion orientation = Quaternion(0.0f, sin(gooseAngle * 0.5f), 0.0f, cos(gooseAngle * 0.5f));
+		sentry->GetTransform().SetLocalOrientation(orientation);
+		if (goose->HasBonusItem())
 			sentry->GetPhysicsObject()->AddForce(directionVec * 5.0f);
-			//http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
-			float gooseAngle = atan2(directionVec.x, directionVec.z);
-			// only rotate around y axis
-			Quaternion orientation = Quaternion(0.0f, sin(gooseAngle * 0.5f), 0.0f, cos(gooseAngle * 0.5f));
-			sentry->GetTransform().SetLocalOrientation(orientation);
-		}
 		//std::cout << "IN CHASE STATE..." << std::endl;
 	};
 
