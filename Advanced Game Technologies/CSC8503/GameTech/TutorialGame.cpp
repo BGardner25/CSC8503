@@ -499,7 +499,7 @@ void TutorialGame::SentryStateMachine() {
 
 	SentryFunc idleFunc = [](GameObject* sentry, GooseObject* goose) {
 		sentry->SetStateDescription("idle");
-		std::cout << "IN IDLE STATE..." << std::endl;
+		//std::cout << "IN IDLE STATE..." << std::endl;
 	};
 
 	SentryFunc chaseFunc = [](GameObject* sentry, GooseObject* goose) {
@@ -507,7 +507,7 @@ void TutorialGame::SentryStateMachine() {
 		Vector3 dir = goose->GetTransform().GetWorldPosition() - sentry->GetTransform().GetWorldPosition();
 		if(goose->HasBonusItem())
 			sentry->GetPhysicsObject()->AddForce(dir * 5.0f);
-		std::cout << "IN CHASE STATE..." << std::endl;
+		//std::cout << "IN CHASE STATE..." << std::endl;
 	};
 
 	SentryState* idleState = new SentryState(idleFunc, sentry, goose);
