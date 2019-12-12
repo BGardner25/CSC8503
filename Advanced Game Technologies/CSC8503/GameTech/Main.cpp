@@ -113,16 +113,16 @@ vector<Vector3> testNodes;
 // how many grid nodes down
 
 void TestPathfinding() {
-	NavigationGrid grid("TestGrid1.txt");
-	//NavigationGrid grid("CourseworkMap.txt");
+	//NavigationGrid grid("TestGrid1.txt");
+	NavigationGrid grid("CourseworkMap.txt");
 
 	NavigationPath outPath;
 	
-	//Vector3 startPos(10, 0, 50);
-	//Vector3 endPos(20, 0, 220);
+	Vector3 startPos(280, 0, 10);
+	Vector3 endPos(10, 0, 340);
 
-	Vector3 startPos(80, 0, 10);
-	Vector3 endPos(80, 0, 80);
+	//Vector3 startPos(80, 0, 10);
+	//Vector3 endPos(80, 0, 80);
 
 	bool found = grid.FindPath(startPos, endPos, outPath);
 
@@ -136,7 +136,7 @@ void DisplayPathfinding() {
 		Vector3 a = testNodes[i - 1];
 		Vector3 b = testNodes[i];
 
-		Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
+		Debug::DrawLine(a, b, Vector4(1, 0, 0, 1));
 	}
 }
 
@@ -163,7 +163,7 @@ int main() {
 
 	//TestStateMachine();
 	//TestNetworking();
-	//TestPathfinding();
+	TestPathfinding();
 	
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);

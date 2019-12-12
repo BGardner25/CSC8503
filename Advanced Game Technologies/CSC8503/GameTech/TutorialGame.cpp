@@ -601,10 +601,10 @@ void TutorialGame::InitWorld() {
 	/*************************************************/
 
 	/******************GATE AREA**********************/
-	gate = AddGateToWorld(Vector3(53, 4, -151), Vector3(0.5, 2, 4), Quaternion(Vector3(0, -0.8, 0), 0.34f));
-	AddWallToWorld(Vector3(50, 4, -118), Vector3(1, 2, 28));
-	AddWallToWorld(Vector3(50, 4, -169), Vector3(1, 2, 15));
-	AddWallToWorld(Vector3(124.5, 4, -185), Vector3(75.5, 2, 1));
+	gate = AddGateToWorld(Vector3(53, 4, -148), Vector3(0.5, 2, 4), Quaternion(Vector3(0, -0.8, 0), 0.34f));
+	AddWallToWorld(Vector3(50, 4, -115), Vector3(1, 2, 28));
+	AddWallToWorld(Vector3(50, 4, -166), Vector3(1, 2, 15));
+	AddWallToWorld(Vector3(124.5, 4, -182), Vector3(75.5, 2, 1));
 	
 	spinner[0] = AddSpinnerToWorld(Vector3(90, 4, -151), Vector3(0.5, 2, 4));
 	spinner[1] = AddSpinnerToWorld(Vector3(90, 4, -121), Vector3(0.5, 2, 4));
@@ -665,7 +665,6 @@ void TutorialGame::InitWorld() {
 	/*************************************************/
 
 	/*******************JUMPING PUZZLE****************/
-	AddPlatformToWorld(Vector3(60, 3, -400), Vector3(5, 0.25, 5));
 	AddPlatformToWorld(Vector3(60, 4, -415), Vector3(5, 0.25, 5));
 	AddPlatformToWorld(Vector3(50, 6, -435), Vector3(5, 0.25, 5));
 	AddPlatformToWorld(Vector3(30, 8, -435), Vector3(5, 0.25, 5));

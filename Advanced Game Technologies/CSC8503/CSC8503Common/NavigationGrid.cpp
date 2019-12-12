@@ -37,7 +37,7 @@ NavigationGrid::NavigationGrid(const std::string&filename) : NavigationGrid() {
 			infile >> type;
 			n.type = type;
 			//n.position = Vector3((float)(x * gridWidth), 0, (float)(y * gridHeight));
-			n.position = Vector3((float)(x * nodeSize), 0, (float)(y * nodeSize));
+			n.position = Vector3((float)(x * nodeSize) - 205, 2.1, (float)(y * nodeSize) - 495);
 		}
 	}
 	
