@@ -48,7 +48,6 @@ namespace NCL {
 			void UpdateMovingBlocks();
 			void SentryStateMachine();
 			void Pathfinding();
-			void KeeperChase(Vector3& direction);
 			//void ParkKeeperStateMachine();
 
 			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), 
@@ -115,7 +114,6 @@ namespace NCL {
 			GameObject* dynamicCube[3];
 			GameObject* trampoline[2];
 
-			// fence, gate, trampoline etc
 			const Vector3 GOOSE_SPAWN = Vector3(0, 3, -40);
 			const Vector3 SENTRY_SPAWN = Vector3(-180, 3, -470);
 			const Vector3 PARK_KEEPER_SPAWN = Vector3(100, 3, -250);
@@ -125,6 +123,10 @@ namespace NCL {
 			int bonusCount = 0;
 			int bonusBanked = 0;
 			int totalScore = 0;
+
+			const int appleValue = 1;
+			const int bonusValue = 5;
+			const int maxValue = (5 * appleValue) + (6 * bonusValue);
 
 			Vector4 originalColour = Vector4(1, 1, 1, 1);
 
@@ -143,6 +145,12 @@ namespace NCL {
 			bool displayObjectInfo = false;
 
 			vector<Vector3> pathNodes;
+
+			float updatePath = 0.51f;
+
+			Vector3 previousPos;
+			Vector3 pos;
+			Vector3 pathDirectionVec;
 		};
 	}
 }

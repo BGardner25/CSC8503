@@ -74,8 +74,8 @@ TutorialGame::~TutorialGame()	{
 	delete sentry;
 	delete lake;
 	delete gate;
-	delete spinner;
 	delete parkKeeper;
+	delete[] spinner;
 	delete[] apple;
 	delete[] bonusItem;
 	delete[] dynamicCube;
@@ -124,6 +124,8 @@ void TutorialGame::UpdateGame(float dt) {
 	physics->Update(dt);
 	stateMachine->Update();
 
+	updatePath += dt;
+	
 	if (enablePathfinding)
 		Pathfinding();
 		
@@ -134,12 +136,11 @@ void TutorialGame::UpdateGame(float dt) {
 		timeLeft--;
 		timePassed = 0;
 	}
-	if (timeLeft <= 0) {
+	if (timeLeft <= 0 || totalScore >= 35) {
 		// @TODO menu to ask if quit or play again
 		ResetGame();
 	}
 
-	// @TODO if apple/bonus added back to world, decrease score
 	for (GameObject* i : apple) {
 		if (i->IsCollected()) {
 			appleCount++;
@@ -157,16 +158,17 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 	if (goose->HasCollidedWith() == CollisionType::HOME && (appleCount > 0 || bonusCount > 0)) {
 		totalScore += appleCount;
-		totalScore += bonusCount * 5;
+		totalScore += bonusCount * bonusValue;
 		appleCount = bonusCount = 0;
 		goose->SetHasBonusItem(false);
 		sentry->GetTransform().SetWorldPosition(SENTRY_SPAWN);
+		parkKeeper->GetTransform().SetWorldPosition(PARK_KEEPER_SPAWN);
 		collectedApples.clear();
 		collectedBonus.clear();
 	}
 	if (goose->HasCollidedWith() == CollisionType::TRAMPOLINE) {
 		goose->SetCollidedWith(CollisionType::DEFAULT);
-		goose->GetPhysicsObject()->AddForce(Vector3(0.0f, 20000.0f, 0.0f));
+		goose->GetPhysicsObject()->AddForce(Vector3(0.0f, 10000.0f, 0.0f));
 	}
 	if (goose->HasCollidedWith() == CollisionType::AI) {
 		goose->SetCollidedWith(CollisionType::DEFAULT);
@@ -181,6 +183,7 @@ void TutorialGame::UpdateGame(float dt) {
 		std::ostringstream s;
 		s << selectionObject->GetTransform().GetWorldPosition();
 		renderer->DrawString(s.str(), Vector2(250, renderer->GetHeight() - 20));
+		// empty s
 		s.str(string());
 		s << selectionObject->GetTransform().GetWorldOrientation();
 		renderer->DrawString(s.str(), Vector2(480, renderer->GetHeight() - 40));
@@ -191,11 +194,14 @@ void TutorialGame::UpdateGame(float dt) {
 	for(GameObject* i : spinner)
 		i->GetPhysicsObject()->AddTorque(Vector3(0.0, 150000.0, 0.0));
 
+	// @TODO spawn new keeper every 30 secs
+
 	Debug::FlushRenderables();
 	renderer->Render();
 }
 
 void TutorialGame::UpdateMovingBlocks() {
+	// move blocks. if they hit a wall, move in the other direction
 	if (dynamicCube[0]->HasCollidedWith() == CollisionType::WALL) {
 		cubeDirection[0] *= -1.0f;
 		dynamicCube[0]->SetCollidedWith(CollisionType::DEFAULT);
@@ -211,11 +217,11 @@ void TutorialGame::UpdateMovingBlocks() {
 	}
 }
 
-// @TODO doesnt work if any object has been collected
 void TutorialGame::ResetGame() {
 	selectionObject = nullptr;
 	delete stateMachine;
 	stateMachine = new StateMachine();
+	enablePathfinding = false;
 	InitWorld();
 	InitMisc();
 }
@@ -357,8 +363,7 @@ void TutorialGame::DebugObjectMovement() {
 void TutorialGame::PlayerMovement() {
 	if (inSelectionMode) {
 		float speed = 150.0f;
-		// @TODO change to torque based orientation
-		Quaternion orientation;
+		/*Quaternion orientation;
 		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
 			orientation = Quaternion(Vector3(0, 1, 0), 0.0f);
 			orientation.Normalise();
@@ -382,7 +387,28 @@ void TutorialGame::PlayerMovement() {
 			orientation.Normalise();
 			goose->GetPhysicsObject()->AddForce(Vector3(speed, 0, 0));
 			goose->GetTransform().SetLocalOrientation(orientation);
+		}*/
+
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::W)) {
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, -speed));
 		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::A)) {
+			goose->GetPhysicsObject()->AddForce(Vector3(-speed, 0, 0));
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::S)) {
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 0, speed));
+		}
+		if (Window::GetKeyboard()->KeyDown(NCL::KeyboardKeys::D)) {
+			goose->GetPhysicsObject()->AddForce(Vector3(speed, 0, 0));
+		}
+
+		// direction goose is facing
+		Vector3 directionVec =  goose->GetTransform().GetWorldPosition() - goose->GetPhysicsObject()->GetAngularVelocity();
+		directionVec.Normalise();
+		float gooseAngle = atan2(directionVec.x, directionVec.z);
+		Quaternion orientation = Quaternion(0.0f, sin(gooseAngle * 0.5f), 0.0f, cos(gooseAngle * 0.5f));
+		orientation.Normalise();
+		goose->GetTransform().SetLocalOrientation(orientation);
 
 		// can only jump if on the floor
 		if ((goose->HasCollidedWith() == CollisionType::FLOOR || goose->HasCollidedWith() == CollisionType::HOME ||
@@ -391,7 +417,7 @@ void TutorialGame::PlayerMovement() {
 		else
 			canJump = false;
 		if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::SPACE) && canJump == true) {
-			goose->GetPhysicsObject()->AddForce(Vector3(0, 300.0f, 0) * 20);
+			goose->GetPhysicsObject()->AddForce(Vector3(0, 100.0f, 0) * 20);
 			canJump = false;
 			goose->SetCollidedWith(CollisionType::NONE);
 		}
@@ -508,6 +534,7 @@ void TutorialGame::SentryStateMachine() {
 	SentryFunc idleFunc = [](GameObject* sentry, GooseObject* goose) {
 		sentry->SetStateDescription("idle");
 		Vector3 directionVec = goose->GetTransform().GetWorldPosition() - sentry->GetTransform().GetWorldPosition();
+		//http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
 		float gooseAngle = atan2(directionVec.x, directionVec.z);
 		// only rotate around y axis
 		Quaternion orientation = Quaternion(0.0f, sin(gooseAngle * 0.5f), 0.0f, cos(gooseAngle * 0.5f));
@@ -532,10 +559,12 @@ void TutorialGame::SentryStateMachine() {
 	stateMachine->AddState(idleState);
 	stateMachine->AddState(chaseState);
 
+	// if distance between sentry and goose < 40 transition to chase state
 	GenericTransition<float&, float>* toChase = new GenericTransition<float&, float>(
 														GenericTransition<float&, float>::LessThanTransition, 
 															sentryToGoose, 40.0f, idleState, chaseState);
 
+	// if distance between sentry and goose > 60 transition to idle state
 	GenericTransition<float&, float>* toIdle = new GenericTransition<float&, float>(
 		GenericTransition<float&, float>::GreaterThanTransition,
 		sentryToGoose, 60.0f, chaseState, idleState);
@@ -581,31 +610,32 @@ void TutorialGame::Pathfinding() {
 	Vector3 startPos = parkKeeper->GetTransform().GetWorldPosition() + difference;
 	Vector3 endPos = goose->GetTransform().GetWorldPosition() + difference;
 
-	bool found = grid.FindPath(startPos, endPos, outPath);
+	bool found = false;
+	// check for new path every 0.5 seconds
+	if (updatePath > 0.50f) {
+		found = grid.FindPath(startPos, endPos, outPath);
+	}
 	
 	if (found) {
-		Vector3 previousPos;
-		Vector3 pos;
-
+		updatePath = 0.0f;
 		outPath.PopWaypoint(previousPos);
 		outPath.PopWaypoint(pos);
 
-		//Vector3 nextPos = previousPos;
+		//Vector3 copyPrevPos = previousPos;
+		//Vector3 copyPos = pos;
 
-		Vector3 directionVec = pos - previousPos;
-		directionVec.Normalise();
+		pathDirectionVec = pos - previousPos;
+		pathDirectionVec.Normalise();
 
 		/*while (outPath.PopWaypoint(pos)) {
-			Debug::DrawLine(previousPos, pos, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
-			previousPos = pos;
+			Debug::DrawLine(copyPreviousPos, copyPos, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+			copyPreviousPos = copyPos;
 		}*/
-
-		parkKeeper->GetPhysicsObject()->AddForce(directionVec * 150.0f);
 	}
-}
-
-void TutorialGame::KeeperChase(Vector3& direction) {
-	parkKeeper->GetPhysicsObject()->AddForce(direction * 5.0f);
+	if (updatePath > 0.50f)
+		parkKeeper->GetPhysicsObject()->ClearForces();
+	else
+		parkKeeper->GetPhysicsObject()->AddForce(pathDirectionVec * 150.0f);
 }
 
 void TutorialGame::InitWorld() {
@@ -890,7 +920,7 @@ GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimens
 	gate->SetRenderObject(new RenderObject(&gate->GetTransform(), cubeMesh, basicTex, basicShader, Vector4(1.0f, 0.6f, 0.2f, 1.0f)));
 	gate->SetPhysicsObject(new PhysicsObject(&gate->GetTransform(), gate->GetBoundingVolume()));
 
-	gate->GetPhysicsObject()->SetInverseMass(0.5);
+	gate->GetPhysicsObject()->SetInverseMass(0.1);
 	gate->GetPhysicsObject()->InitCubeInertia();
 
 	world->AddGameObject(gate);

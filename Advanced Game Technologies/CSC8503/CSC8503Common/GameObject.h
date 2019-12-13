@@ -36,6 +36,7 @@ namespace NCL {
 				return isActive;
 			}
 
+			// @TODO make collectableObject class...
 			void SetCollectable(bool isCollectable) { this->isCollectable = isCollectable; }
 			bool IsCollectable() const { return isCollectable; }
 
@@ -91,6 +92,7 @@ namespace NCL {
 			/*void SetLayer(Layer layer) { this->layer = layer; }
 			Layer GetLayer() const { return layer; }*/
 
+			// @TODO make AIObject class
 			void SetStateDescription(string description) { stateDescription = description; }
 			string GetStateDescription() const { return stateDescription; }
 
@@ -106,9 +108,14 @@ namespace NCL {
 			NetworkObject*		networkObject;
 
 			bool	isActive;
+
+			// @TODO put in collectableObj class
 			bool	isCollectable;
 			bool	collected;
+
 			string	name;
+
+			// @TODO put in AIObj class
 			string	stateDescription;
 
 			Vector3 broadphaseAABB;

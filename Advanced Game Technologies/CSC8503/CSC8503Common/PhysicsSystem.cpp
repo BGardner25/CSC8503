@@ -18,7 +18,6 @@ PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
 	dTOffset		= 0.0f;
 	globalDamping	= 0.95f;
 	// gravity * 10 as an easy way to reduce 'floaty' feeling throughout the game
-	// gravity * 10 as an easy way to reduce 'floaty' feeling throughout the game
 	SetGravity(Vector3(0.0f, -9.8f * 10.0f, 0.0f));
 }
 
