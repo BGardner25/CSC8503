@@ -921,6 +921,7 @@ GameObject* TutorialGame::AddGateToWorld(const Vector3& position, Vector3 dimens
 	gate->SetPhysicsObject(new PhysicsObject(&gate->GetTransform(), gate->GetBoundingVolume()));
 
 	gate->GetPhysicsObject()->SetInverseMass(0.1);
+	gate->GetPhysicsObject()->SetElasticity(0.0);
 	gate->GetPhysicsObject()->InitCubeInertia();
 
 	world->AddGameObject(gate);
@@ -1003,6 +1004,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 		cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
 
 	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
+	cube->GetPhysicsObject()->SetElasticity(0.0);
 	cube->GetPhysicsObject()->InitCubeInertia();
 
 	world->AddGameObject(cube);
@@ -1079,6 +1081,7 @@ GameObject* TutorialGame::AddParkKeeperToWorld(const Vector3& position)
 	keeper->SetPhysicsObject(new PhysicsObject(&keeper->GetTransform(), keeper->GetBoundingVolume()));
 
 	keeper->GetPhysicsObject()->SetInverseMass(inverseMass);
+	keeper->GetPhysicsObject()->SetElasticity(0.0);
 	keeper->GetPhysicsObject()->InitCubeInertia();
 	keeper->GetPhysicsObject()->SetCollisionType(CollisionType::AI);
 
@@ -1116,6 +1119,7 @@ GameObject* TutorialGame::AddCharacterToWorld(const Vector3& position) {
 	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
+	character->GetPhysicsObject()->SetElasticity(0.0);
 	character->GetPhysicsObject()->InitCubeInertia();
 	character->GetPhysicsObject()->SetCollisionType(CollisionType::AI);
 
@@ -1139,6 +1143,7 @@ GameObject* TutorialGame::AddAppleToWorld(const Vector3& position) {
 	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
 
 	apple->GetPhysicsObject()->SetInverseMass(1.0f);
+	apple->GetPhysicsObject()->SetElasticity(0.0);
 	apple->GetPhysicsObject()->InitSphereInertia();
 	apple->GetPhysicsObject()->SetCollisionType(CollisionType::COLLECTABLE);
 
