@@ -92,13 +92,13 @@ void TutorialGame::UpdateGame(float dt) {
 	
 	UpdateKeys();
 
-	/*if (useGravity) {
-		Debug::Print("(G)ravity on", Vector2(10, 40));
+	if (useGravity) {
+		Debug::Print("(G)ravity on", Vector2(renderer->GetWidth() - 400, 20));
 	}
 	else {
-		Debug::Print("(G)ravity off", Vector2(10, 40));
+		Debug::Print("(G)ravity off", Vector2(renderer->GetWidth() - 400, 20));
 	}
-	if (useBroadPhase) {
+	/*if (useBroadPhase) {
 		Debug::Print("Broadphase on", Vector2(20, 60));
 	}
 	else {
@@ -403,7 +403,7 @@ void TutorialGame::PlayerMovement() {
 		}
 
 		// direction goose is facing
-		Vector3 directionVec =  goose->GetTransform().GetWorldPosition() - goose->GetPhysicsObject()->GetAngularVelocity();
+		Vector3 directionVec = goose->GetTransform().GetWorldPosition() - goose->GetPhysicsObject()->GetAngularVelocity();
 		directionVec.Normalise();
 		float gooseAngle = atan2(directionVec.x, directionVec.z);
 		Quaternion orientation = Quaternion(0.0f, sin(gooseAngle * 0.5f), 0.0f, cos(gooseAngle * 0.5f));
