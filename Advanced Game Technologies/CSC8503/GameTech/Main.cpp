@@ -118,7 +118,7 @@ void TestPathfinding() {
 
 	NavigationPath outPath;
 	
-	Vector3 startPos(280, 0, 10);
+	Vector3 startPos(310, 0, 240);
 	Vector3 endPos(10, 0, 340);
 
 	//Vector3 startPos(80, 0, 10);
@@ -163,7 +163,7 @@ int main() {
 
 	//TestStateMachine();
 	//TestNetworking();
-	TestPathfinding();
+	//TestPathfinding();
 	
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);

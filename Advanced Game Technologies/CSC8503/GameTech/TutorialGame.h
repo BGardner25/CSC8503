@@ -5,6 +5,7 @@
 #include "../CSC8503Common/StateTransition.h"
 #include "../CSC8503Common/State.h"
 #include "../CSC8503Common//GooseObject.h"
+#include "../CSC8503Common/NavigationGrid.h"
 #include <sstream>
 #include <iomanip>
 
@@ -46,6 +47,9 @@ namespace NCL {
 			void ResetGame();
 			void UpdateMovingBlocks();
 			void SentryStateMachine();
+			void Pathfinding();
+			void KeeperChase(Vector3& direction);
+			//void ParkKeeperStateMachine();
 
 			GameObject* AddFloorToWorld(const Vector3& position, Vector3 dimensions = Vector3(100, 2, 100), 
 											string name = "Floor", CollisionType collisionType = CollisionType::FLOOR);
@@ -74,6 +78,7 @@ namespace NCL {
 			bool useGravity;
 			bool useBroadPhase;
 			bool inSelectionMode;
+			bool enablePathfinding;
 
 			float		forceMagnitude;
 
@@ -102,7 +107,8 @@ namespace NCL {
 			GooseObject* goose = nullptr;
 			GameObject* sentry = nullptr;
 			GameObject* lake = nullptr;
-			GameObject* gate = nullptr;
+			GameObject* gate = nullptr; 
+			GameObject* parkKeeper = nullptr;
 			GameObject* spinner[6];
 			GameObject* apple[5];
 			GameObject* bonusItem[6];
@@ -112,6 +118,7 @@ namespace NCL {
 			// fence, gate, trampoline etc
 			const Vector3 GOOSE_SPAWN = Vector3(0, 3, -40);
 			const Vector3 SENTRY_SPAWN = Vector3(-180, 3, -470);
+			const Vector3 PARK_KEEPER_SPAWN = Vector3(100, 3, -250);
 
 			int appleCount = 0;
 			int applesBanked = 0;
@@ -124,16 +131,18 @@ namespace NCL {
 			std::vector<GameObject*> collectedApples;
 			std::vector<GameObject*> collectedBonus;
 
-
 			int timeLeft = 180;
 			float timePassed = 0;
-			bool canJump = true;
 			float cubeDirection[3] = { 1.0f, 1.0f, 1.0f };
 
 			StateMachine* stateMachine;
 
 			float sentryToGoose = 0;
+
+			bool canJump = true;
 			bool displayObjectInfo = false;
+
+			vector<Vector3> pathNodes;
 		};
 	}
 }

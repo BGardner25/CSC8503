@@ -12,6 +12,7 @@ namespace NCL {
 
 		typedef void(*StateFunc)(void*);
 		typedef void(*SentryFunc)(GameObject* sentry, GooseObject* player);
+		typedef void(*KeeperFunc)(GameObject* keeper, GooseObject* player);
 
 		class GenericState : public State		{
 		public:
@@ -45,6 +46,25 @@ namespace NCL {
 		protected:
 			SentryFunc func;
 			GameObject* sentry;
+			GooseObject* player;
+		};
+
+		class KeeperState : public State {
+		public:
+			KeeperState(KeeperFunc someFunc, GameObject* keeper, GooseObject* player) {
+				func = someFunc;
+				this->keeper = keeper;
+				this->player = player;
+			}
+
+			virtual void Update() {
+				if (keeper == nullptr || player == nullptr)
+					return;
+				func(keeper, player);
+			}
+		protected:
+			KeeperFunc func;
+			GameObject* keeper;
 			GooseObject* player;
 		};
 	}

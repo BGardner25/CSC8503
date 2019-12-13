@@ -20,6 +20,7 @@ TutorialGame::TutorialGame()	{
 	useGravity		= false;
 	useBroadPhase	= true;
 	inSelectionMode = true;
+	enablePathfinding = false;
 
 	Debug::SetRenderer(renderer);
 	
@@ -74,6 +75,7 @@ TutorialGame::~TutorialGame()	{
 	delete lake;
 	delete gate;
 	delete spinner;
+	delete parkKeeper;
 	delete[] apple;
 	delete[] bonusItem;
 	delete[] dynamicCube;
@@ -122,6 +124,9 @@ void TutorialGame::UpdateGame(float dt) {
 	physics->Update(dt);
 	stateMachine->Update();
 
+	if (enablePathfinding)
+		Pathfinding();
+		
 	sentryToGoose = (goose->GetTransform().GetWorldPosition() - sentry->GetTransform().GetWorldPosition()).Length();
 
 	timePassed += dt;
@@ -232,6 +237,9 @@ void TutorialGame::UpdateKeys() {
 		useBroadPhase = !useBroadPhase;
 		physics->UseBroadPhase(useBroadPhase);
 	}*/
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P)) {
+		enablePathfinding = !enablePathfinding;
+	}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
 	//allowing the other one to stretch too much etc. Shuffling the order so that it
@@ -504,7 +512,6 @@ void TutorialGame::SentryStateMachine() {
 		// only rotate around y axis
 		Quaternion orientation = Quaternion(0.0f, sin(gooseAngle * 0.5f), 0.0f, cos(gooseAngle * 0.5f));
 		sentry->GetTransform().SetLocalOrientation(orientation);
-		//std::cout << "IN IDLE STATE..." << std::endl;
 	};
 
 	SentryFunc chaseFunc = [](GameObject* sentry, GooseObject* goose) {
@@ -517,7 +524,6 @@ void TutorialGame::SentryStateMachine() {
 		sentry->GetTransform().SetLocalOrientation(orientation);
 		if (goose->HasBonusItem())
 			sentry->GetPhysicsObject()->AddForce(directionVec * 5.0f);
-		//std::cout << "IN CHASE STATE..." << std::endl;
 	};
 
 	SentryState* idleState = new SentryState(idleFunc, sentry, goose);
@@ -536,6 +542,79 @@ void TutorialGame::SentryStateMachine() {
 
 	stateMachine->AddTransition(toIdle);
 	stateMachine->AddTransition(toChase);
+}
+
+/*void TutorialGame::ParkKeeperStateMachine() {
+	KeeperFunc idleFunc = [](GameObject* keeper, GooseObject* goose) {
+		keeper->SetStateDescription("idle");
+	};
+
+	KeeperFunc chaseFunc = [](GameObject* keeper, GooseObject* goose) {
+		keeper->SetStateDescription("chasing");
+	};
+
+	KeeperState* idleState = new KeeperState(idleFunc, sentry, goose);
+	KeeperState* chaseState = new KeeperState(chaseFunc, sentry, goose);
+
+	stateMachine->AddState(idleState);
+	stateMachine->AddState(chaseState);
+
+	GenericTransition<float&, float>* toChase = new GenericTransition<float&, float>(
+		GenericTransition<float&, float>::LessThanTransition,
+		sentryToGoose, 40.0f, idleState, chaseState);
+
+	GenericTransition<float&, float>* toIdle = new GenericTransition<float&, float>(
+		GenericTransition<float&, float>::GreaterThanTransition,
+		sentryToGoose, 60.0f, chaseState, idleState);
+
+	stateMachine->AddTransition(toIdle);
+	stateMachine->AddTransition(toChase);
+}*/
+
+void TutorialGame::Pathfinding() {
+	NavigationGrid grid("CourseworkMap.txt");
+
+	NavigationPath outPath;
+
+	Vector3 difference = Vector3(210.0f, 0.0f, 500.0f);
+
+	Vector3 startPos = parkKeeper->GetTransform().GetWorldPosition() + difference;
+	Vector3 endPos = goose->GetTransform().GetWorldPosition() + difference;
+
+	bool found = grid.FindPath(startPos, endPos, outPath);
+	
+	if (found) {
+		Vector3 previousPos;
+		Vector3 pos;
+
+		outPath.PopWaypoint(previousPos);
+
+		//Vector3 nextPos = previousPos;
+
+		while (outPath.PopWaypoint(pos)) {
+			Debug::DrawLine(pos, previousPos, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+			previousPos = pos;
+		}
+
+		//Vector3 directionVec = (nextPos - difference) - parkKeeper->GetTransform().GetWorldPosition();
+		//directionVec.Normalise();
+
+		//parkKeeper->GetPhysicsObject()->AddForce(directionVec * 50.0f);
+
+		/*Vector3 pos;
+		while (outPath.PopWaypoint(pos))
+			pathNodes.push_back(pos - difference);
+
+		Vector3 nextPos = pathNodes[1];
+		Vector3 dir = nextPos - parkKeeper->GetTransform().GetWorldPosition();
+		dir.Normalise();
+		parkKeeper->GetPhysicsObject()->AddForce(dir * 50.0f);*/
+		
+	}
+}
+
+void TutorialGame::KeeperChase(Vector3& direction) {
+	parkKeeper->GetPhysicsObject()->AddForce(direction * 5.0f);
 }
 
 void TutorialGame::InitWorld() {
@@ -671,6 +750,8 @@ void TutorialGame::InitWorld() {
 	AddPlatformToWorld(Vector3(30, 10, -455), Vector3(5, 0.25, 5));
 	AddPlatformToWorld(Vector3(50, 12, -465), Vector3(5, 0.25, 5));
 	/*************************************************/
+
+	parkKeeper = AddParkKeeperToWorld(PARK_KEEPER_SPAWN);
 
 	SentryStateMachine();
 }
@@ -978,6 +1059,7 @@ GameObject* TutorialGame::AddParkKeeperToWorld(const Vector3& position)
 
 	keeper->GetPhysicsObject()->SetInverseMass(inverseMass);
 	keeper->GetPhysicsObject()->InitCubeInertia();
+	keeper->GetPhysicsObject()->SetCollisionType(CollisionType::AI);
 
 	world->AddGameObject(keeper);
 
