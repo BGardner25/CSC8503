@@ -588,28 +588,19 @@ void TutorialGame::Pathfinding() {
 		Vector3 pos;
 
 		outPath.PopWaypoint(previousPos);
+		outPath.PopWaypoint(pos);
 
 		//Vector3 nextPos = previousPos;
 
-		while (outPath.PopWaypoint(pos)) {
-			Debug::DrawLine(pos, previousPos, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+		Vector3 directionVec = pos - previousPos;
+		directionVec.Normalise();
+
+		/*while (outPath.PopWaypoint(pos)) {
+			Debug::DrawLine(previousPos, pos, Vector4(0.0f, 0.0f, 1.0f, 1.0f));
 			previousPos = pos;
-		}
+		}*/
 
-		//Vector3 directionVec = (nextPos - difference) - parkKeeper->GetTransform().GetWorldPosition();
-		//directionVec.Normalise();
-
-		//parkKeeper->GetPhysicsObject()->AddForce(directionVec * 50.0f);
-
-		/*Vector3 pos;
-		while (outPath.PopWaypoint(pos))
-			pathNodes.push_back(pos - difference);
-
-		Vector3 nextPos = pathNodes[1];
-		Vector3 dir = nextPos - parkKeeper->GetTransform().GetWorldPosition();
-		dir.Normalise();
-		parkKeeper->GetPhysicsObject()->AddForce(dir * 50.0f);*/
-		
+		parkKeeper->GetPhysicsObject()->AddForce(directionVec * 150.0f);
 	}
 }
 
@@ -681,7 +672,7 @@ void TutorialGame::InitWorld() {
 
 	/******************GATE AREA**********************/
 	gate = AddGateToWorld(Vector3(53, 4, -148), Vector3(0.5, 2, 4), Quaternion(Vector3(0, -0.8, 0), 0.34f));
-	AddWallToWorld(Vector3(50, 4, -115), Vector3(1, 2, 28));
+	AddWallToWorld(Vector3(50, 4, -115), Vector3(1, 2, 26));
 	AddWallToWorld(Vector3(50, 4, -166), Vector3(1, 2, 15));
 	AddWallToWorld(Vector3(124.5, 4, -182), Vector3(75.5, 2, 1));
 	
