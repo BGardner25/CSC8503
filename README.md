@@ -1,2 +1,1 @@
-# CSC8503
-Advanced Game Technologies
+# CSC8503 Advanced Game Technologies
